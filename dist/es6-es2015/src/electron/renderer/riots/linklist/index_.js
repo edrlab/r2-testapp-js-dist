@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const index_1 = require("../../index");
 exports.riotMountLinkList = (selector, opts) => {
     const tag = riot.mount(selector, opts);
     return tag;
@@ -16,7 +15,11 @@ window.riot_linklist = function (_opts) {
         ev.preventDefault();
         const href = ev.currentTarget.getAttribute("href");
         if (href) {
-            index_1.handleLink(href, undefined, false);
+            let thiz = this;
+            while (!thiz.opts.handleLink && thiz.parent) {
+                thiz = thiz.parent;
+            }
+            thiz.opts.handleLink(href);
         }
     };
 };

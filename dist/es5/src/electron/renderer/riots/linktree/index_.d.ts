@@ -5,6 +5,7 @@ export interface IRiotOptsLinkTreeItem {
 }
 export interface IRiotOptsLinkTree {
     basic: boolean;
+    handleLink: (href: string) => void;
     links: IRiotOptsLinkTreeItem[];
     url: string;
 }
