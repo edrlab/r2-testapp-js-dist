@@ -1,0 +1,3 @@
+riot.tag2('riot-mytag', '<h2 class="{clazz: applyClazz}" onclick="{onclickHeading}">{opts.opt1} {prop1}</h2> <span ref="testSpan">span <yield></yield> </span> <button disabled="{!applyClazz}" onclick="{onclickButton}">butt</button> <span hide="{applyClazz}">applyClazz</span>', 'riot-mytag.clazz,[data-is="riot-mytag"].clazz,riot-mytag .clazz,[data-is="riot-mytag"] .clazz{ border: 6px solid rgb(196, 49, 98); } riot-mytag,[data-is="riot-mytag"]{ background: black; color: orange; border: 3px solid blue; display: block; position: relative; width: 50%; height: 2em; } riot-mytag h2,[data-is="riot-mytag"] h2{ background: green; color: magenta; }', 'class="{clazz: applyClazz}" id="myRiotTagID"', function(opts) {
+window.riot_mytag.call(this, this.opts);
+});

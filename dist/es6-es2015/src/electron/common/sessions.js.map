@@ -1,0 +1,1 @@
+{"version":3,"file":"sessions.js","sourceRoot":"","sources":["../../../../../src/electron/common/sessions.ts"],"names":[],"mappings":";;AAAa,QAAA,kBAAkB,GAAG,4BAA4B,CAAC","sourcesContent":["export const R2_SESSION_WEBVIEW = \"persist:readium2pubwebview\";\n"]}

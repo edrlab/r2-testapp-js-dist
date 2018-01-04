@@ -1,0 +1,3 @@
+riot.tag2('riot-linklistgroup', '<div if="{opts.linksgroup && opts.linksgroup.length}" class="mdc-list-group"> <virtual each="{opts.linksgroup}" no-reorder> <h2 class="mdc-list-group__subheader">{label}</h2> <div data-is="riot-linklist" links="{links}" url="{parent.opts.url}" basic="{parent.opts.basic}"> </div> <hr class="mdc-list-divider"> </virtual> </div> <p if="{!opts.linksgroup || !opts.linksgroup.length}">NO LINKS GROUP!?</p>', 'riot-linklistgroup .mdc-list-group__subheader,[data-is="riot-linklistgroup"] .mdc-list-group__subheader{ padding-left: 0.5em; font-weight: 600; line-height: 1em; }', '', function(opts) {
+window.riot_linklistgroup.call(this, this.opts);
+});
