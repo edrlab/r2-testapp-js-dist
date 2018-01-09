@@ -761,19 +761,25 @@ function startNavigatorExperiment() {
         drawer.open = true;
         setTimeout(() => {
             drawer.open = false;
-            let distTarget = "es5";
-            if (__dirname.indexOf("es6-es2015") > 0) {
+            let preloadPath = "./preload.js";
+            let distTarget;
+            if (__dirname.indexOf("/dist/es5") > 0) {
+                distTarget = "es5";
+            }
+            else if (__dirname.indexOf("/dist/es6-es2015") > 0) {
                 distTarget = "es6-es2015";
             }
-            else if (__dirname.indexOf("es7-es2016") > 0) {
+            else if (__dirname.indexOf("/dist/es7-es2016") > 0) {
                 distTarget = "es7-es2016";
             }
-            else if (__dirname.indexOf("es8-es2017") > 0) {
+            else if (__dirname.indexOf("/dist/es8-es2017") > 0) {
                 distTarget = "es8-es2017";
             }
-            const preloadPath = path.join(process.cwd(), "node_modules/r2-navigator-js/dist/" +
-                distTarget
-                + "/src/electron/renderer/webview/preload.js");
+            if (distTarget) {
+                preloadPath = path.join(process.cwd(), "node_modules/r2-navigator-js/dist/" +
+                    distTarget
+                    + "/src/electron/renderer/webview/preload.js");
+            }
             index_1.installNavigatorDOM(_publication, publicationJsonUrl, "publication_viewport", preloadPath, pubDocHrefToLoad, pubDocSelectorToGoto);
         }, 500);
     })();
