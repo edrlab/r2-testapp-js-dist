@@ -20,7 +20,10 @@ const portfinder = require("portfinder");
 const events_1 = require("../common/events");
 const lsd_deviceid_manager_1 = require("./lsd-deviceid-manager");
 init_globals_1.initGlobals();
-const lcpPluginPath = path.join(process.cwd(), "LCP", "lcp.node");
+const IS_DEV = (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev");
+const lcpPluginPath = IS_DEV ?
+    path.join(process.cwd(), "LCP", "lcp.node") :
+    path.join(__dirname, "lcp.node");
 lcp_1.setLcpNativePluginPath(lcpPluginPath);
 const debug = debug_("r2:electron:main");
 let _publicationsServer;
@@ -28,7 +31,17 @@ let _publicationsServerPort;
 let _publicationsRootUrl;
 let _publicationsFilePaths;
 let _publicationsUrls;
-const DEFAULT_BOOK_PATH = fs.realpathSync(path.resolve("./misc/epubs/"));
+let DEFAULT_BOOK_PATH = path.join(IS_DEV ? process.cwd() : __dirname, "misc", "epubs");
+debug(DEFAULT_BOOK_PATH);
+if (fs.existsSync(DEFAULT_BOOK_PATH)) {
+    debug("DEFAULT_BOOK_PATH => exists");
+    DEFAULT_BOOK_PATH = fs.realpathSync(path.resolve(DEFAULT_BOOK_PATH));
+    debug(DEFAULT_BOOK_PATH);
+}
+else {
+    debug("DEFAULT_BOOK_PATH => missing");
+    DEFAULT_BOOK_PATH = ".";
+}
 let _lastBookPath;
 function openAllDevTools() {
     for (const wc of electron_1.webContents.getAllWebContents()) {
@@ -96,7 +109,9 @@ async function createElectronBrowserWindow(publicationFilePath, publicationUrl) 
         debug("electronBrowserWindow dom-ready " + publicationFilePath + " : " + publicationUrl);
     });
     const urlEncoded = UrlUtils_1.encodeURIComponent_RFC3986(publicationUrl);
-    let fullUrl = `file://${__dirname}/../renderer/index.html?pub=${urlEncoded}`;
+    let htmlPath = IS_DEV ? `${__dirname}/../renderer/index.html` : `${__dirname}/index.html`;
+    htmlPath = htmlPath.replace(/\\/g, "/");
+    let fullUrl = `file://${htmlPath}?pub=${urlEncoded}`;
     if (lcpHint) {
         fullUrl = fullUrl + "&lcpHint=" + UrlUtils_1.encodeURIComponent_RFC3986(lcpHint);
     }
@@ -109,6 +124,9 @@ electron_1.app.on("ready", () => {
     (async () => {
         try {
             _publicationsFilePaths = await filehound.create()
+                .depth(0)
+                .ignoreHiddenDirectories()
+                .ignoreHiddenFiles()
                 .paths(DEFAULT_BOOK_PATH)
                 .ext([".epub", ".epub3", ".cbz", ".lcpl"])
                 .find();
@@ -122,7 +140,10 @@ electron_1.app.on("ready", () => {
             disableReaders: false,
         });
         lcp_2.installLcpHandler(_publicationsServer, lsd_deviceid_manager_1.deviceIDManager);
-        readium_css_1.setupReadiumCSS(_publicationsServer, path.join(process.cwd(), "dist/ReadiumCSS"));
+        const readiumCSSPath = IS_DEV ?
+            path.join(process.cwd(), "dist", "ReadiumCSS").replace(/\\/g, "/") :
+            path.join(__dirname, "ReadiumCSS").replace(/\\/g, "/");
+        readium_css_1.setupReadiumCSS(_publicationsServer, readiumCSSPath);
         const pubPaths = _publicationsServer.addPublications(_publicationsFilePaths);
         try {
             _publicationsServerPort = await portfinder.getPortPromise();

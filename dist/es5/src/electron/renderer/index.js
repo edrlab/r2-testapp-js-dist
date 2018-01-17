@@ -17,6 +17,7 @@ var index_2 = require("./riots/linklist/index_");
 var index_3 = require("./riots/linklistgroup/index_");
 var index_4 = require("./riots/linktree/index_");
 var index_5 = require("./riots/menuselect/index_");
+var IS_DEV = (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev");
 var electronStore = new store_electron_1.StoreElectron("readium2-testapp", {
     basicLinkTitles: true,
     styling: {
@@ -805,6 +806,9 @@ function startNavigatorExperiment() {
                                 distTarget
                                 + "/src/electron/renderer/webview/preload.js");
                         }
+                        preloadPath = IS_DEV ? preloadPath : __dirname + "/preload.js";
+                        preloadPath = preloadPath.replace(/\\/g, "/");
+                        console.log(preloadPath);
                         index_1.installNavigatorDOM(_publication, publicationJsonUrl, "publication_viewport", preloadPath, pubDocHrefToLoad, pubDocSelectorToGoto);
                     }, 500);
                     return [2];

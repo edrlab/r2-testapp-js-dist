@@ -22,7 +22,10 @@ var portfinder = require("portfinder");
 var events_1 = require("../common/events");
 var lsd_deviceid_manager_1 = require("./lsd-deviceid-manager");
 init_globals_1.initGlobals();
-var lcpPluginPath = path.join(process.cwd(), "LCP", "lcp.node");
+var IS_DEV = (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev");
+var lcpPluginPath = IS_DEV ?
+    path.join(process.cwd(), "LCP", "lcp.node") :
+    path.join(__dirname, "lcp.node");
 lcp_1.setLcpNativePluginPath(lcpPluginPath);
 var debug = debug_("r2:electron:main");
 var _publicationsServer;
@@ -30,7 +33,17 @@ var _publicationsServerPort;
 var _publicationsRootUrl;
 var _publicationsFilePaths;
 var _publicationsUrls;
-var DEFAULT_BOOK_PATH = fs.realpathSync(path.resolve("./misc/epubs/"));
+var DEFAULT_BOOK_PATH = path.join(IS_DEV ? process.cwd() : __dirname, "misc", "epubs");
+debug(DEFAULT_BOOK_PATH);
+if (fs.existsSync(DEFAULT_BOOK_PATH)) {
+    debug("DEFAULT_BOOK_PATH => exists");
+    DEFAULT_BOOK_PATH = fs.realpathSync(path.resolve(DEFAULT_BOOK_PATH));
+    debug(DEFAULT_BOOK_PATH);
+}
+else {
+    debug("DEFAULT_BOOK_PATH => missing");
+    DEFAULT_BOOK_PATH = ".";
+}
 var _lastBookPath;
 function openAllDevTools() {
     for (var _i = 0, _a = electron_1.webContents.getAllWebContents(); _i < _a.length; _i++) {
@@ -44,7 +57,7 @@ electron_1.ipcMain.on(events_1.R2_EVENT_DEVTOOLS, function (_event, _arg) {
 function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
     return tslib_1.__awaiter(this, void 0, void 0, function () {
         var _this = this;
-        var publication, err_1, lcpHint, err_2, electronBrowserWindow, urlEncoded, fullUrl;
+        var publication, err_1, lcpHint, err_2, electronBrowserWindow, urlEncoded, htmlPath, fullUrl;
         return tslib_1.__generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -126,7 +139,9 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                         debug("electronBrowserWindow dom-ready " + publicationFilePath + " : " + publicationUrl);
                     });
                     urlEncoded = UrlUtils_1.encodeURIComponent_RFC3986(publicationUrl);
-                    fullUrl = "file://" + __dirname + "/../renderer/index.html?pub=" + urlEncoded;
+                    htmlPath = IS_DEV ? __dirname + "/../renderer/index.html" : __dirname + "/index.html";
+                    htmlPath = htmlPath.replace(/\\/g, "/");
+                    fullUrl = "file://" + htmlPath + "?pub=" + urlEncoded;
                     if (lcpHint) {
                         fullUrl = fullUrl + "&lcpHint=" + UrlUtils_1.encodeURIComponent_RFC3986(lcpHint);
                     }
@@ -142,12 +157,15 @@ electron_1.app.on("ready", function () {
     debug("app ready");
     (function () { return tslib_1.__awaiter(_this, void 0, void 0, function () {
         var _this = this;
-        var err_4, pubPaths, err_5;
+        var err_4, readiumCSSPath, pubPaths, err_5;
         return tslib_1.__generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     _a.trys.push([0, 2, , 3]);
                     return [4, filehound.create()
+                            .depth(0)
+                            .ignoreHiddenDirectories()
+                            .ignoreHiddenFiles()
                             .paths(DEFAULT_BOOK_PATH)
                             .ext([".epub", ".epub3", ".cbz", ".lcpl"])
                             .find()];
@@ -165,7 +183,10 @@ electron_1.app.on("ready", function () {
                         disableReaders: false,
                     });
                     lcp_2.installLcpHandler(_publicationsServer, lsd_deviceid_manager_1.deviceIDManager);
-                    readium_css_1.setupReadiumCSS(_publicationsServer, path.join(process.cwd(), "dist/ReadiumCSS"));
+                    readiumCSSPath = IS_DEV ?
+                        path.join(process.cwd(), "dist", "ReadiumCSS").replace(/\\/g, "/") :
+                        path.join(__dirname, "ReadiumCSS").replace(/\\/g, "/");
+                    readium_css_1.setupReadiumCSS(_publicationsServer, readiumCSSPath);
                     pubPaths = _publicationsServer.addPublications(_publicationsFilePaths);
                     _a.label = 4;
                 case 4:
