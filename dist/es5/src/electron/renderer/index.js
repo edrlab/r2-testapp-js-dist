@@ -789,16 +789,17 @@ function startNavigatorExperiment() {
                         drawer.open = false;
                         var preloadPath = "./preload.js";
                         var distTarget;
-                        if (__dirname.indexOf("/dist/es5") > 0) {
+                        var dirnameSlashed = __dirname.replace(/\\/g, "/");
+                        if (dirnameSlashed.indexOf("/dist/es5") > 0) {
                             distTarget = "es5";
                         }
-                        else if (__dirname.indexOf("/dist/es6-es2015") > 0) {
+                        else if (dirnameSlashed.indexOf("/dist/es6-es2015") > 0) {
                             distTarget = "es6-es2015";
                         }
-                        else if (__dirname.indexOf("/dist/es7-es2016") > 0) {
+                        else if (dirnameSlashed.indexOf("/dist/es7-es2016") > 0) {
                             distTarget = "es7-es2016";
                         }
-                        else if (__dirname.indexOf("/dist/es8-es2017") > 0) {
+                        else if (dirnameSlashed.indexOf("/dist/es8-es2017") > 0) {
                             distTarget = "es8-es2017";
                         }
                         if (distTarget) {
@@ -806,7 +807,7 @@ function startNavigatorExperiment() {
                                 distTarget
                                 + "/src/electron/renderer/webview/preload.js");
                         }
-                        preloadPath = IS_DEV ? preloadPath : __dirname + "/preload.js";
+                        preloadPath = IS_DEV ? preloadPath : dirnameSlashed + "/preload.js";
                         preloadPath = preloadPath.replace(/\\/g, "/");
                         console.log(preloadPath);
                         index_1.installNavigatorDOM(_publication, publicationJsonUrl, "publication_viewport", preloadPath, pubDocHrefToLoad, pubDocSelectorToGoto);
