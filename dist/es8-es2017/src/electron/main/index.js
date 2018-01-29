@@ -137,8 +137,11 @@ electron_1.app.on("ready", () => {
         debug(_publicationsFilePaths);
         _publicationsServer = new server_1.Server({
             disableDecryption: false,
-            disableReaders: false,
+            disableOPDS: true,
+            disableReaders: true,
+            disableRemotePubUrl: true,
         });
+        sessions_1.secureSessions(_publicationsServer);
         lcp_2.installLcpHandler(_publicationsServer, lsd_deviceid_manager_1.deviceIDManager);
         const readiumCSSPath = IS_DEV ?
             path.join(process.cwd(), "dist", "ReadiumCSS").replace(/\\/g, "/") :
@@ -151,7 +154,11 @@ electron_1.app.on("ready", () => {
         catch (err) {
             debug(err);
         }
-        _publicationsRootUrl = _publicationsServer.start(_publicationsServerPort);
+        _publicationsServerPort = 443;
+        const serverInfo = await _publicationsServer.start(_publicationsServerPort);
+        debug(serverInfo);
+        _publicationsRootUrl = _publicationsServer.serverUrl();
+        debug(_publicationsRootUrl);
         _publicationsUrls = pubPaths.map((pubPath) => {
             return `${_publicationsRootUrl}${pubPath}`;
         });

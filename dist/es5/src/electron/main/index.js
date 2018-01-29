@@ -157,7 +157,7 @@ electron_1.app.on("ready", function () {
     debug("app ready");
     (function () { return tslib_1.__awaiter(_this, void 0, void 0, function () {
         var _this = this;
-        var err_4, readiumCSSPath, pubPaths, err_5;
+        var err_4, readiumCSSPath, pubPaths, err_5, serverInfo;
         return tslib_1.__generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -180,8 +180,11 @@ electron_1.app.on("ready", function () {
                     debug(_publicationsFilePaths);
                     _publicationsServer = new server_1.Server({
                         disableDecryption: false,
-                        disableReaders: false,
+                        disableOPDS: true,
+                        disableReaders: true,
+                        disableRemotePubUrl: true,
                     });
+                    sessions_1.secureSessions(_publicationsServer);
                     lcp_2.installLcpHandler(_publicationsServer, lsd_deviceid_manager_1.deviceIDManager);
                     readiumCSSPath = IS_DEV ?
                         path.join(process.cwd(), "dist", "ReadiumCSS").replace(/\\/g, "/") :
@@ -200,7 +203,13 @@ electron_1.app.on("ready", function () {
                     debug(err_5);
                     return [3, 7];
                 case 7:
-                    _publicationsRootUrl = _publicationsServer.start(_publicationsServerPort);
+                    _publicationsServerPort = 443;
+                    return [4, _publicationsServer.start(_publicationsServerPort)];
+                case 8:
+                    serverInfo = _a.sent();
+                    debug(serverInfo);
+                    _publicationsRootUrl = _publicationsServer.serverUrl();
+                    debug(_publicationsRootUrl);
                     _publicationsUrls = pubPaths.map(function (pubPath) {
                         return "" + _publicationsRootUrl + pubPath;
                     });
