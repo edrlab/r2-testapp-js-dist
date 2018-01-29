@@ -157,8 +157,7 @@ electron_1.app.on("ready", () => {
         catch (err) {
             debug(err);
         }
-        _publicationsServerPort = 443;
-        const serverInfo = yield _publicationsServer.start(_publicationsServerPort);
+        const serverInfo = yield _publicationsServer.start(_publicationsServerPort, true);
         debug(serverInfo);
         _publicationsRootUrl = _publicationsServer.serverUrl();
         debug(_publicationsRootUrl);

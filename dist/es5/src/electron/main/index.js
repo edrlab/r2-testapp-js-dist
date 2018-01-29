@@ -202,9 +202,7 @@ electron_1.app.on("ready", function () {
                     err_5 = _a.sent();
                     debug(err_5);
                     return [3, 7];
-                case 7:
-                    _publicationsServerPort = 443;
-                    return [4, _publicationsServer.start(_publicationsServerPort)];
+                case 7: return [4, _publicationsServer.start(_publicationsServerPort, true)];
                 case 8:
                     serverInfo = _a.sent();
                     debug(serverInfo);
