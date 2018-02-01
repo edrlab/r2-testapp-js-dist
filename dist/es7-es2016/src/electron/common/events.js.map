@@ -1,1 +1,0 @@
-{"version":3,"file":"events.js","sourceRoot":"","sources":["../../../../../src/electron/common/events.ts"],"names":[],"mappings":";;AAEa,QAAA,iBAAiB,GAAG,mBAAmB,CAAC","sourcesContent":["// in RENDERER: ipcRenderer.send()\n// in MAIN: ipcMain.on()\nexport const R2_EVENT_DEVTOOLS = \"R2_EVENT_DEVTOOLS\";\n"]}
