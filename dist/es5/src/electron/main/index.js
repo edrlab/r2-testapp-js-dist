@@ -158,7 +158,7 @@ electron_1.app.on("ready", function () {
     debug("app ready");
     (function () { return tslib_1.__awaiter(_this, void 0, void 0, function () {
         var _this = this;
-        var err_4, readiumCSSPath, pubPaths, err_5, serverInfo;
+        var err_4, readiumCSSPath, pubPaths, err_5;
         return tslib_1.__generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -206,8 +206,7 @@ electron_1.app.on("ready", function () {
                     return [3, 7];
                 case 7: return [4, _publicationsServer.start(_publicationsServerPort, true)];
                 case 8:
-                    serverInfo = _a.sent();
-                    debug(serverInfo);
+                    _a.sent();
                     _publicationsRootUrl = _publicationsServer.serverUrl();
                     debug(_publicationsRootUrl);
                     _publicationsUrls = pubPaths.map(function (pubPath) {

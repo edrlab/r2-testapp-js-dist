@@ -156,8 +156,7 @@ electron_1.app.on("ready", () => {
         catch (err) {
             debug(err);
         }
-        const serverInfo = await _publicationsServer.start(_publicationsServerPort, true);
-        debug(serverInfo);
+        await _publicationsServer.start(_publicationsServerPort, true);
         _publicationsRootUrl = _publicationsServer.serverUrl();
         debug(_publicationsRootUrl);
         _publicationsUrls = pubPaths.map((pubPath) => {
