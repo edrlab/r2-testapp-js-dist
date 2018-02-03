@@ -7,6 +7,7 @@ const lcp_1 = require("r2-lcp-js/dist/es8-es2017/src/parser/epub/lcp");
 const publication_download_1 = require("r2-lcp-js/dist/es8-es2017/src/publication-download");
 const browser_window_tracker_1 = require("r2-navigator-js/dist/es8-es2017/src/electron/main/browser-window-tracker");
 const lcp_2 = require("r2-navigator-js/dist/es8-es2017/src/electron/main/lcp");
+const lsd_1 = require("r2-navigator-js/dist/es8-es2017/src/electron/main/lsd");
 const lsd_injectlcpl_1 = require("r2-navigator-js/dist/es8-es2017/src/electron/main/lsd-injectlcpl");
 const readium_css_1 = require("r2-navigator-js/dist/es8-es2017/src/electron/main/readium-css");
 const sessions_1 = require("r2-navigator-js/dist/es8-es2017/src/electron/main/sessions");
@@ -142,7 +143,8 @@ electron_1.app.on("ready", () => {
             disableRemotePubUrl: true,
         });
         sessions_1.secureSessions(_publicationsServer);
-        lcp_2.installLcpHandler(_publicationsServer, lsd_deviceid_manager_1.deviceIDManager);
+        lcp_2.installLcpHandler(_publicationsServer);
+        lsd_1.installLsdHandler(_publicationsServer, lsd_deviceid_manager_1.deviceIDManager);
         const readiumCSSPath = IS_DEV ?
             path.join(process.cwd(), "dist", "ReadiumCSS").replace(/\\/g, "/") :
             path.join(__dirname, "ReadiumCSS").replace(/\\/g, "/");
