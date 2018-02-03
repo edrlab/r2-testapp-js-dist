@@ -28,7 +28,7 @@ var lcpPluginPath = IS_DEV ?
     path.join(process.cwd(), "LCP", "lcp.node") :
     path.join(__dirname, "lcp.node");
 lcp_1.setLcpNativePluginPath(lcpPluginPath);
-var debug = debug_("r2:electron:main");
+var debug = debug_("r2:testapp#electron/main/index");
 var _publicationsServer;
 var _publicationsServerPort;
 var _publicationsRootUrl;
@@ -221,20 +221,20 @@ electron_1.app.on("ready", function () {
                             switch (_a.label) {
                                 case 0:
                                     args = process.argv.slice(2);
-                                    console.log("args:");
-                                    console.log(args);
+                                    debug("args:");
+                                    debug(args);
                                     if (args && args.length && args[0]) {
                                         argPath = args[0].trim();
                                         filePath = argPath;
-                                        console.log(filePath);
+                                        debug(filePath);
                                         if (!fs.existsSync(filePath)) {
                                             filePath = path.join(__dirname, argPath);
-                                            console.log(filePath);
+                                            debug(filePath);
                                             if (!fs.existsSync(filePath)) {
                                                 filePath = path.join(process.cwd(), argPath);
-                                                console.log(filePath);
+                                                debug(filePath);
                                                 if (!fs.existsSync(filePath)) {
-                                                    console.log("FILEPATH DOES NOT EXIST: " + filePath);
+                                                    debug("FILEPATH DOES NOT EXIST: " + filePath);
                                                 }
                                                 else {
                                                     filePathToLoadOnLaunch = filePath;
@@ -246,7 +246,7 @@ electron_1.app.on("ready", function () {
                                         }
                                         else {
                                             filePath = fs.realpathSync(filePath);
-                                            console.log(filePath);
+                                            debug(filePath);
                                             filePathToLoadOnLaunch = filePath;
                                         }
                                     }

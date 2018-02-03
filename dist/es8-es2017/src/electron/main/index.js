@@ -26,7 +26,7 @@ const lcpPluginPath = IS_DEV ?
     path.join(process.cwd(), "LCP", "lcp.node") :
     path.join(__dirname, "lcp.node");
 lcp_1.setLcpNativePluginPath(lcpPluginPath);
-const debug = debug_("r2:electron:main");
+const debug = debug_("r2:testapp#electron/main/index");
 let _publicationsServer;
 let _publicationsServerPort;
 let _publicationsRootUrl;
@@ -167,21 +167,21 @@ electron_1.app.on("ready", () => {
         resetMenu();
         process.nextTick(async () => {
             const args = process.argv.slice(2);
-            console.log("args:");
-            console.log(args);
+            debug("args:");
+            debug(args);
             let filePathToLoadOnLaunch;
             if (args && args.length && args[0]) {
                 const argPath = args[0].trim();
                 let filePath = argPath;
-                console.log(filePath);
+                debug(filePath);
                 if (!fs.existsSync(filePath)) {
                     filePath = path.join(__dirname, argPath);
-                    console.log(filePath);
+                    debug(filePath);
                     if (!fs.existsSync(filePath)) {
                         filePath = path.join(process.cwd(), argPath);
-                        console.log(filePath);
+                        debug(filePath);
                         if (!fs.existsSync(filePath)) {
-                            console.log("FILEPATH DOES NOT EXIST: " + filePath);
+                            debug("FILEPATH DOES NOT EXIST: " + filePath);
                         }
                         else {
                             filePathToLoadOnLaunch = filePath;
@@ -193,7 +193,7 @@ electron_1.app.on("ready", () => {
                 }
                 else {
                     filePath = fs.realpathSync(filePath);
-                    console.log(filePath);
+                    debug(filePath);
                     filePathToLoadOnLaunch = filePath;
                 }
             }

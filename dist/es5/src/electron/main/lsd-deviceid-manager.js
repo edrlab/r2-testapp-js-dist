@@ -4,7 +4,7 @@ var debug_ = require("debug");
 var uuid = require("uuid");
 var store_electron_1 = require("../common/store-electron");
 exports.electronStoreLSD = new store_electron_1.StoreElectron("readium2-testapp-lsd", {});
-var debug = debug_("r2:electron:main:lsd");
+var debug = debug_("r2:testapp#electron/main/lsd-deviceid-manager");
 var LSD_STORE_DEVICEID_ENTRY_PREFIX = "deviceID_";
 exports.deviceIDManager = {
     checkDeviceID: function (key) {
