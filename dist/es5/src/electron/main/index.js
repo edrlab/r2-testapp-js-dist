@@ -2,6 +2,7 @@
 var _this = this;
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = require("tslib");
+var express = require("express");
 var fs = require("fs");
 var path = require("path");
 var status_document_processing_1 = require("r2-lcp-js/dist/es5/src/lsd/status-document-processing");
@@ -158,7 +159,7 @@ electron_1.app.on("ready", function () {
     debug("app ready");
     (function () { return tslib_1.__awaiter(_this, void 0, void 0, function () {
         var _this = this;
-        var err_4, readiumCSSPath, pubPaths, err_5;
+        var err_4, readiumCSSPath, preloadPath, distTarget, dirnameSlashed, staticOptions, pubPaths, err_5;
         return tslib_1.__generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -192,6 +193,39 @@ electron_1.app.on("ready", function () {
                         path.join(process.cwd(), "dist", "ReadiumCSS").replace(/\\/g, "/") :
                         path.join(__dirname, "ReadiumCSS").replace(/\\/g, "/");
                     readium_css_1.setupReadiumCSS(_publicationsServer, readiumCSSPath);
+                    if (IS_DEV) {
+                        preloadPath = "FOLDER_PATH_TO/preload.js";
+                        distTarget = void 0;
+                        dirnameSlashed = __dirname.replace(/\\/g, "/");
+                        if (dirnameSlashed.indexOf("/dist/es5") > 0) {
+                            distTarget = "es5";
+                        }
+                        else if (dirnameSlashed.indexOf("/dist/es6-es2015") > 0) {
+                            distTarget = "es6-es2015";
+                        }
+                        else if (dirnameSlashed.indexOf("/dist/es7-es2016") > 0) {
+                            distTarget = "es7-es2016";
+                        }
+                        else if (dirnameSlashed.indexOf("/dist/es8-es2017") > 0) {
+                            distTarget = "es8-es2017";
+                        }
+                        if (distTarget) {
+                            preloadPath = path.join(process.cwd(), "node_modules/r2-navigator-js/dist/" +
+                                distTarget);
+                        }
+                        preloadPath = preloadPath.replace(/\\/g, "/");
+                        console.log(preloadPath);
+                        staticOptions = {
+                            dotfiles: "ignore",
+                            etag: true,
+                            fallthrough: false,
+                            immutable: true,
+                            index: false,
+                            maxAge: "1d",
+                            redirect: false,
+                        };
+                        _publicationsServer.expressUse(preloadPath, express.static(preloadPath, staticOptions));
+                    }
                     pubPaths = _publicationsServer.addPublications(_publicationsFilePaths);
                     _a.label = 4;
                 case 4:

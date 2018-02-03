@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const status_document_processing_1 = require("r2-lcp-js/dist/es8-es2017/src/lsd/status-document-processing");
@@ -149,6 +150,39 @@ electron_1.app.on("ready", () => {
             path.join(process.cwd(), "dist", "ReadiumCSS").replace(/\\/g, "/") :
             path.join(__dirname, "ReadiumCSS").replace(/\\/g, "/");
         readium_css_1.setupReadiumCSS(_publicationsServer, readiumCSSPath);
+        if (IS_DEV) {
+            let preloadPath = "FOLDER_PATH_TO/preload.js";
+            let distTarget;
+            const dirnameSlashed = __dirname.replace(/\\/g, "/");
+            if (dirnameSlashed.indexOf("/dist/es5") > 0) {
+                distTarget = "es5";
+            }
+            else if (dirnameSlashed.indexOf("/dist/es6-es2015") > 0) {
+                distTarget = "es6-es2015";
+            }
+            else if (dirnameSlashed.indexOf("/dist/es7-es2016") > 0) {
+                distTarget = "es7-es2016";
+            }
+            else if (dirnameSlashed.indexOf("/dist/es8-es2017") > 0) {
+                distTarget = "es8-es2017";
+            }
+            if (distTarget) {
+                preloadPath = path.join(process.cwd(), "node_modules/r2-navigator-js/dist/" +
+                    distTarget);
+            }
+            preloadPath = preloadPath.replace(/\\/g, "/");
+            console.log(preloadPath);
+            const staticOptions = {
+                dotfiles: "ignore",
+                etag: true,
+                fallthrough: false,
+                immutable: true,
+                index: false,
+                maxAge: "1d",
+                redirect: false,
+            };
+            _publicationsServer.expressUse(preloadPath, express.static(preloadPath, staticOptions));
+        }
         const pubPaths = _publicationsServer.addPublications(_publicationsFilePaths);
         try {
             _publicationsServerPort = await portfinder.getPortPromise();
