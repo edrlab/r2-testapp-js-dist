@@ -165,8 +165,63 @@ window.onerror = function (err) {
 };
 electron_1.ipcRenderer.on(events_1.R2_EVENT_TRY_LCP_PASS_RES, function (_event, okay, msg, passSha256Hex) {
     if (!okay) {
+        var message_1;
+        if (typeof msg === "string") {
+            message_1 = msg;
+        }
+        else {
+            switch (msg) {
+                case 0: {
+                    message_1 = "NONE: " + msg;
+                    break;
+                }
+                case 1: {
+                    message_1 = "INCORRECT PASSPHRASE: " + msg;
+                    break;
+                }
+                case 11: {
+                    message_1 = "LICENSE_OUT_OF_DATE: " + msg;
+                    break;
+                }
+                case 101: {
+                    message_1 = "CERTIFICATE_REVOKED: " + msg;
+                    break;
+                }
+                case 102: {
+                    message_1 = "CERTIFICATE_SIGNATURE_INVALID: " + msg;
+                    break;
+                }
+                case 111: {
+                    message_1 = "LICENSE_SIGNATURE_DATE_INVALID: " + msg;
+                    break;
+                }
+                case 112: {
+                    message_1 = "LICENSE_SIGNATURE_INVALID: " + msg;
+                    break;
+                }
+                case 121: {
+                    message_1 = "CONTEXT_INVALID: " + msg;
+                    break;
+                }
+                case 131: {
+                    message_1 = "CONTENT_KEY_DECRYPT_ERROR: " + msg;
+                    break;
+                }
+                case 141: {
+                    message_1 = "USER_KEY_CHECK_INVALID: " + msg;
+                    break;
+                }
+                case 151: {
+                    message_1 = "CONTENT_DECRYPT_ERROR: " + msg;
+                    break;
+                }
+                default: {
+                    message_1 = "Unknown error?! " + msg;
+                }
+            }
+        }
         setTimeout(function () {
-            showLcpDialog(msg);
+            showLcpDialog(message_1);
         }, 500);
         return;
     }
