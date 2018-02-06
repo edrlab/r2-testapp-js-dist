@@ -2,8 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
 const path = require("path");
-const SystemFonts = require("system-font-families");
-const debounce = require("debounce");
 const publication_1 = require("r2-shared-js/dist/es7-es2016/src/models/publication");
 const events_1 = require("r2-navigator-js/dist/es7-es2016/src/electron/common/events");
 const querystring_1 = require("r2-navigator-js/dist/es7-es2016/src/electron/renderer/common/querystring");
@@ -16,6 +14,8 @@ const index_2 = require("./riots/linklist/index_");
 const index_3 = require("./riots/linklistgroup/index_");
 const index_4 = require("./riots/linktree/index_");
 const index_5 = require("./riots/menuselect/index_");
+const SystemFonts = require("system-font-families");
+const debounce = require("debounce");
 const IS_DEV = (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev");
 const electronStore = new store_electron_1.StoreElectron("readium2-testapp", {
     basicLinkTitles: true,

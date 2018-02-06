@@ -3,8 +3,6 @@ var _this = this;
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = require("tslib");
 var path = require("path");
-var SystemFonts = require("system-font-families");
-var debounce = require("debounce");
 var publication_1 = require("r2-shared-js/dist/es5/src/models/publication");
 var events_1 = require("r2-navigator-js/dist/es5/src/electron/common/events");
 var querystring_1 = require("r2-navigator-js/dist/es5/src/electron/renderer/common/querystring");
@@ -17,6 +15,8 @@ var index_2 = require("./riots/linklist/index_");
 var index_3 = require("./riots/linklistgroup/index_");
 var index_4 = require("./riots/linktree/index_");
 var index_5 = require("./riots/menuselect/index_");
+var SystemFonts = require("system-font-families");
+var debounce = require("debounce");
 var IS_DEV = (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev");
 var electronStore = new store_electron_1.StoreElectron("readium2-testapp", {
     basicLinkTitles: true,

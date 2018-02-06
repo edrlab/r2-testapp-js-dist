@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
-const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const status_document_processing_1 = require("r2-lcp-js/dist/es6-es2015/src/lsd/status-document-processing");
@@ -18,10 +17,14 @@ const server_1 = require("r2-streamer-js/dist/es6-es2015/src/http/server");
 const UrlUtils_1 = require("r2-utils-js/dist/es6-es2015/src/_utils/http/UrlUtils");
 const debug_ = require("debug");
 const electron_1 = require("electron");
+const express = require("express");
 const filehound = require("filehound");
 const portfinder = require("portfinder");
 const events_1 = require("../common/events");
+const store_electron_1 = require("../common/store-electron");
 const lsd_deviceid_manager_1 = require("./lsd-deviceid-manager");
+const electronStoreLSD = new store_electron_1.StoreElectron("readium2-testapp-lsd", {});
+const deviceIDManager = lsd_deviceid_manager_1.getDeviceIDManager(electronStoreLSD, "Readium2 Electron desktop app");
 init_globals_1.initGlobals();
 const IS_DEV = (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev");
 const lcpPluginPath = IS_DEV ?
@@ -68,7 +71,7 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
         let lcpHint;
         if (publication && publication.LCP) {
             try {
-                yield status_document_processing_1.launchStatusDocumentProcessing(publication.LCP, lsd_deviceid_manager_1.deviceIDManager, (licenseUpdateJson) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                yield status_document_processing_1.launchStatusDocumentProcessing(publication.LCP, deviceIDManager, (licenseUpdateJson) => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     debug("launchStatusDocumentProcessing DONE.");
                     if (licenseUpdateJson) {
                         let res;
@@ -148,7 +151,7 @@ electron_1.app.on("ready", () => {
         });
         sessions_1.secureSessions(_publicationsServer);
         lcp_2.installLcpHandler(_publicationsServer);
-        lsd_1.installLsdHandler(_publicationsServer, lsd_deviceid_manager_1.deviceIDManager);
+        lsd_1.installLsdHandler(_publicationsServer, deviceIDManager);
         const readiumCSSPath = IS_DEV ?
             path.join(process.cwd(), "dist", "ReadiumCSS").replace(/\\/g, "/") :
             path.join(__dirname, "ReadiumCSS").replace(/\\/g, "/");

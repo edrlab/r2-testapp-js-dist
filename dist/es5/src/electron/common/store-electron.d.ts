@@ -1,4 +1,4 @@
-import { IStore } from "r2-navigator-js/dist/es5/src/electron/common/store";
+import { IStore } from "./store";
 export declare class StoreElectron implements IStore {
     readonly defaults: any;
     private _electronStore;

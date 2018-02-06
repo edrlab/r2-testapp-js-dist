@@ -2,7 +2,6 @@
 var _this = this;
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = require("tslib");
-var express = require("express");
 var fs = require("fs");
 var path = require("path");
 var status_document_processing_1 = require("r2-lcp-js/dist/es5/src/lsd/status-document-processing");
@@ -19,10 +18,14 @@ var server_1 = require("r2-streamer-js/dist/es5/src/http/server");
 var UrlUtils_1 = require("r2-utils-js/dist/es5/src/_utils/http/UrlUtils");
 var debug_ = require("debug");
 var electron_1 = require("electron");
+var express = require("express");
 var filehound = require("filehound");
 var portfinder = require("portfinder");
 var events_1 = require("../common/events");
+var store_electron_1 = require("../common/store-electron");
 var lsd_deviceid_manager_1 = require("./lsd-deviceid-manager");
+var electronStoreLSD = new store_electron_1.StoreElectron("readium2-testapp-lsd", {});
+var deviceIDManager = lsd_deviceid_manager_1.getDeviceIDManager(electronStoreLSD, "Readium2 Electron desktop app");
 init_globals_1.initGlobals();
 var IS_DEV = (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev");
 var lcpPluginPath = IS_DEV ?
@@ -80,7 +83,7 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                     _a.label = 5;
                 case 5:
                     _a.trys.push([5, 7, , 8]);
-                    return [4, status_document_processing_1.launchStatusDocumentProcessing(publication.LCP, lsd_deviceid_manager_1.deviceIDManager, function (licenseUpdateJson) { return tslib_1.__awaiter(_this, void 0, void 0, function () {
+                    return [4, status_document_processing_1.launchStatusDocumentProcessing(publication.LCP, deviceIDManager, function (licenseUpdateJson) { return tslib_1.__awaiter(_this, void 0, void 0, function () {
                             var res, err_3;
                             return tslib_1.__generator(this, function (_a) {
                                 switch (_a.label) {
@@ -188,7 +191,7 @@ electron_1.app.on("ready", function () {
                     });
                     sessions_1.secureSessions(_publicationsServer);
                     lcp_2.installLcpHandler(_publicationsServer);
-                    lsd_1.installLsdHandler(_publicationsServer, lsd_deviceid_manager_1.deviceIDManager);
+                    lsd_1.installLsdHandler(_publicationsServer, deviceIDManager);
                     readiumCSSPath = IS_DEV ?
                         path.join(process.cwd(), "dist", "ReadiumCSS").replace(/\\/g, "/") :
                         path.join(__dirname, "ReadiumCSS").replace(/\\/g, "/");
