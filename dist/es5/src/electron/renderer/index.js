@@ -4,12 +4,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = require("tslib");
 var path = require("path");
 var publication_1 = require("r2-shared-js/dist/es5/src/models/publication");
-var events_1 = require("r2-navigator-js/dist/es5/src/electron/common/events");
 var querystring_1 = require("r2-navigator-js/dist/es5/src/electron/renderer/common/querystring");
 var index_1 = require("r2-navigator-js/dist/es5/src/electron/renderer/index");
 var init_globals_1 = require("r2-shared-js/dist/es5/src/init-globals");
 var electron_1 = require("electron");
 var ta_json_1 = require("ta-json");
+var events_1 = require("../common/events");
 var store_electron_1 = require("../common/store-electron");
 var index_2 = require("./riots/linklist/index_");
 var index_3 = require("./riots/linklistgroup/index_");
@@ -62,11 +62,10 @@ var computeReadiumCssJsonMessage = function () {
             sepia: sepia,
         };
         var jsonMsg = { injectCSS: "yes", setCSS: cssJson };
-        return JSON.stringify(jsonMsg, null, 0);
+        return jsonMsg;
     }
     else {
-        var jsonMsg = { injectCSS: "rollback", setCSS: "rollback" };
-        return JSON.stringify(jsonMsg, null, 0);
+        return { injectCSS: "rollback", setCSS: "rollback" };
     }
 };
 index_1.setReadiumCssJsonGetter(computeReadiumCssJsonMessage);
@@ -163,60 +162,60 @@ var drawer;
 window.onerror = function (err) {
     console.log("Error", err);
 };
-electron_1.ipcRenderer.on(events_1.R2_EVENT_TRY_LCP_PASS_RES, function (_event, okay, msg, passSha256Hex) {
-    if (!okay) {
+electron_1.ipcRenderer.on(events_1.R2_EVENT_TRY_LCP_PASS_RES, function (_event, payload) {
+    if (!payload.okay && payload.error) {
         var message_1;
-        if (typeof msg === "string") {
-            message_1 = msg;
+        if (typeof payload.error === "string") {
+            message_1 = payload.error;
         }
         else {
-            switch (msg) {
+            switch (payload.error) {
                 case 0: {
-                    message_1 = "NONE: " + msg;
+                    message_1 = "NONE: " + payload.error;
                     break;
                 }
                 case 1: {
-                    message_1 = "INCORRECT PASSPHRASE: " + msg;
+                    message_1 = "INCORRECT PASSPHRASE: " + payload.error;
                     break;
                 }
                 case 11: {
-                    message_1 = "LICENSE_OUT_OF_DATE: " + msg;
+                    message_1 = "LICENSE_OUT_OF_DATE: " + payload.error;
                     break;
                 }
                 case 101: {
-                    message_1 = "CERTIFICATE_REVOKED: " + msg;
+                    message_1 = "CERTIFICATE_REVOKED: " + payload.error;
                     break;
                 }
                 case 102: {
-                    message_1 = "CERTIFICATE_SIGNATURE_INVALID: " + msg;
+                    message_1 = "CERTIFICATE_SIGNATURE_INVALID: " + payload.error;
                     break;
                 }
                 case 111: {
-                    message_1 = "LICENSE_SIGNATURE_DATE_INVALID: " + msg;
+                    message_1 = "LICENSE_SIGNATURE_DATE_INVALID: " + payload.error;
                     break;
                 }
                 case 112: {
-                    message_1 = "LICENSE_SIGNATURE_INVALID: " + msg;
+                    message_1 = "LICENSE_SIGNATURE_INVALID: " + payload.error;
                     break;
                 }
                 case 121: {
-                    message_1 = "CONTEXT_INVALID: " + msg;
+                    message_1 = "CONTEXT_INVALID: " + payload.error;
                     break;
                 }
                 case 131: {
-                    message_1 = "CONTENT_KEY_DECRYPT_ERROR: " + msg;
+                    message_1 = "CONTENT_KEY_DECRYPT_ERROR: " + payload.error;
                     break;
                 }
                 case 141: {
-                    message_1 = "USER_KEY_CHECK_INVALID: " + msg;
+                    message_1 = "USER_KEY_CHECK_INVALID: " + payload.error;
                     break;
                 }
                 case 151: {
-                    message_1 = "CONTENT_DECRYPT_ERROR: " + msg;
+                    message_1 = "CONTENT_DECRYPT_ERROR: " + payload.error;
                     break;
                 }
                 default: {
-                    message_1 = "Unknown error?! " + msg;
+                    message_1 = "Unknown error?! " + payload.error;
                 }
             }
         }
@@ -225,24 +224,26 @@ electron_1.ipcRenderer.on(events_1.R2_EVENT_TRY_LCP_PASS_RES, function (_event, 
         }, 500);
         return;
     }
-    var lcpStore = electronStoreLCP.get("lcp");
-    if (!lcpStore) {
-        var lcpObj = {};
-        var pubLcpObj = lcpObj[pathDecoded] = {};
-        pubLcpObj.sha = passSha256Hex;
-        electronStoreLCP.set("lcp", lcpObj);
-    }
-    else {
-        var pubLcpStore = lcpStore[pathDecoded];
-        if (pubLcpStore) {
-            pubLcpStore.sha = passSha256Hex;
+    if (payload.passSha256Hex) {
+        var lcpStore = electronStoreLCP.get("lcp");
+        if (!lcpStore) {
+            var lcpObj = {};
+            var pubLcpObj = lcpObj[pathDecoded] = {};
+            pubLcpObj.sha = payload.passSha256Hex;
+            electronStoreLCP.set("lcp", lcpObj);
         }
         else {
-            lcpStore[pathDecoded] = {
-                sha: passSha256Hex,
-            };
+            var pubLcpStore = lcpStore[pathDecoded];
+            if (pubLcpStore) {
+                pubLcpStore.sha = payload.passSha256Hex;
+            }
+            else {
+                lcpStore[pathDecoded] = {
+                    sha: payload.passSha256Hex,
+                };
+            }
+            electronStoreLCP.set("lcp", lcpStore);
         }
-        electronStoreLCP.set("lcp", lcpStore);
     }
     startNavigatorExperiment();
 });
@@ -564,7 +565,12 @@ window.addEventListener("DOMContentLoaded", function () {
     diagElem.mdcDialog = lcpDialog;
     lcpDialog.listen("MDCDialog:accept", function () {
         var lcpPass = lcpPassInput.value;
-        electron_1.ipcRenderer.send(events_1.R2_EVENT_TRY_LCP_PASS, pathDecoded, lcpPass, false);
+        var payload = {
+            isSha256Hex: false,
+            lcpPass: lcpPass,
+            publicationFilePath: pathDecoded,
+        };
+        electron_1.ipcRenderer.send(events_1.R2_EVENT_TRY_LCP_PASS, payload);
     });
     lcpDialog.listen("MDCDialog:cancel", function () {
         setTimeout(function () {
@@ -590,7 +596,12 @@ window.addEventListener("DOMContentLoaded", function () {
             }
         }
         if (lcpPassSha256Hex) {
-            electron_1.ipcRenderer.send(events_1.R2_EVENT_TRY_LCP_PASS, pathDecoded, lcpPassSha256Hex, true);
+            var payload = {
+                isSha256Hex: true,
+                lcpPass: lcpPassSha256Hex,
+                publicationFilePath: pathDecoded,
+            };
+            electron_1.ipcRenderer.send(events_1.R2_EVENT_TRY_LCP_PASS, payload);
         }
         else {
             showLcpDialog();
@@ -664,22 +675,31 @@ window.addEventListener("DOMContentLoaded", function () {
     });
     var buttonLSDRenew = document.getElementById("buttonLSDRenew");
     buttonLSDRenew.addEventListener("click", function () {
-        electron_1.ipcRenderer.send(events_1.R2_EVENT_LCP_LSD_RENEW, pathDecoded, "");
+        var payload = {
+            endDateStr: undefined,
+            publicationFilePath: pathDecoded,
+        };
+        electron_1.ipcRenderer.send(events_1.R2_EVENT_LCP_LSD_RENEW, payload);
     });
     var buttonLSDReturn = document.getElementById("buttonLSDReturn");
     buttonLSDReturn.addEventListener("click", function () {
-        electron_1.ipcRenderer.send(events_1.R2_EVENT_LCP_LSD_RETURN, pathDecoded);
+        var payload = {
+            publicationFilePath: pathDecoded,
+        };
+        electron_1.ipcRenderer.send(events_1.R2_EVENT_LCP_LSD_RETURN, payload);
     });
 });
-electron_1.ipcRenderer.on(events_1.R2_EVENT_LCP_LSD_RENEW_RES, function (_event, okay, msg) {
+electron_1.ipcRenderer.on(events_1.R2_EVENT_LCP_LSD_RENEW_RES, function (_event, payload) {
     console.log("R2_EVENT_LCP_LSD_RENEW_RES");
-    console.log(okay);
-    console.log(msg);
+    console.log(payload.okay);
+    console.log(payload.error);
+    console.log(payload.lsdJson);
 });
-electron_1.ipcRenderer.on(events_1.R2_EVENT_LCP_LSD_RETURN_RES, function (_event, okay, msg) {
+electron_1.ipcRenderer.on(events_1.R2_EVENT_LCP_LSD_RETURN_RES, function (_event, payload) {
     console.log("R2_EVENT_LCP_LSD_RETURN_RES");
-    console.log(okay);
-    console.log(msg);
+    console.log(payload.okay);
+    console.log(payload.error);
+    console.log(payload.lsdJson);
 });
 function startNavigatorExperiment() {
     var _this = this;
