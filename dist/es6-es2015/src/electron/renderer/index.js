@@ -92,12 +92,6 @@ electronStore.onChanged("styling.night", (newValue, oldValue) => {
     }
     const nightSwitch = document.getElementById("night_switch-input");
     nightSwitch.checked = newValue;
-    if (newValue) {
-        document.body.classList.add("mdc-theme--dark");
-    }
-    else {
-        document.body.classList.remove("mdc-theme--dark");
-    }
     readiumCssOnOff();
 });
 electronStore.onChanged("styling.align", (newValue, oldValue) => {
@@ -465,12 +459,6 @@ window.addEventListener("DOMContentLoaded", () => {
     const h1 = document.getElementById("pubTitle");
     h1.textContent = pathFileName;
     installKeyboardMouseFocusHandler();
-    if (electronStore.get("styling.night")) {
-        document.body.classList.add("mdc-theme--dark");
-    }
-    else {
-        document.body.classList.remove("mdc-theme--dark");
-    }
     const drawerElement = document.getElementById("drawer");
     drawer = new window.mdc.drawer.MDCTemporaryDrawer(drawerElement);
     drawerElement.mdcTemporaryDrawer = drawer;
@@ -861,10 +849,47 @@ function startNavigatorExperiment() {
             preloadPath = IS_DEV ? preloadPath : `${dirnameSlashed}/preload.js`;
             preloadPath = preloadPath.replace(/\\/g, "/");
             console.log(preloadPath);
-            index_1.installNavigatorDOM(_publication, publicationJsonUrl, "publication_viewport", preloadPath, pubDocHrefToLoad, pubDocSelectorToGoto);
+            const rootHtmlElementID = "publication_viewport";
+            const rootHtmlElement = document.getElementById(rootHtmlElementID);
+            if (!rootHtmlElement) {
+                console.log("!rootHtmlElement ???");
+                return;
+            }
+            rootHtmlElement.addEventListener(index_1.DOM_EVENT_HIDE_VIEWPORT, () => {
+                hideWebView();
+            });
+            rootHtmlElement.addEventListener(index_1.DOM_EVENT_SHOW_VIEWPORT, () => {
+                unhideWebView();
+            });
+            index_1.installNavigatorDOM(_publication, publicationJsonUrl, rootHtmlElementID, preloadPath, pubDocHrefToLoad, pubDocSelectorToGoto);
         }, 500);
     }))();
 }
+const ELEMENT_ID_HIDE_PANEL = "r2_navigator_reader_chrome_HIDE";
+let _viewHideInterval;
+const unhideWebView = () => {
+    if (_viewHideInterval) {
+        clearInterval(_viewHideInterval);
+        _viewHideInterval = undefined;
+    }
+    const hidePanel = document.getElementById(ELEMENT_ID_HIDE_PANEL);
+    if (!hidePanel || hidePanel.style.display === "none") {
+        return;
+    }
+    if (hidePanel) {
+        hidePanel.style.display = "none";
+    }
+};
+const hideWebView = () => {
+    const hidePanel = document.getElementById(ELEMENT_ID_HIDE_PANEL);
+    if (hidePanel && hidePanel.style.display !== "block") {
+        hidePanel.style.display = "block";
+        _viewHideInterval = setInterval(() => {
+            console.log("unhideWebView FORCED");
+            unhideWebView();
+        }, 5000);
+    }
+};
 function handleLink_(href) {
     if (drawer.open) {
         drawer.open = false;
