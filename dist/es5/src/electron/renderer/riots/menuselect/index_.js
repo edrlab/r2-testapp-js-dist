@@ -54,7 +54,7 @@ window.riot_menuselect = function (_opts) {
     };
     that.on("mount", function () {
         var menuFactory = function (menuEl) {
-            var menu = new window.mdc.menu.MDCSimpleMenu(menuEl);
+            var menu = new window.mdc.menu.MDCMenu(menuEl);
             menuEl.mdcSimpleMenu = menu;
             return menu;
         };

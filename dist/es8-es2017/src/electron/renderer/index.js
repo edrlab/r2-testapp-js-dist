@@ -442,7 +442,7 @@ const initFontSelector = () => {
     }, 100);
 };
 window.addEventListener("DOMContentLoaded", () => {
-    window.mdc.menu.MDCSimpleMenuFoundation.numbers.TRANSITION_DURATION_MS = 200;
+    window.mdc.menu.MDCMenuFoundation.numbers.TRANSITION_DURATION_MS = 200;
     window.document.addEventListener("keydown", (ev) => {
         if (drawer.open) {
             return;
@@ -523,7 +523,7 @@ window.addEventListener("DOMContentLoaded", () => {
     snackBarElem.mdcSnackbar = snackBar;
     snackBar.dismissesOnAction = true;
     const menuFactory = (menuEl) => {
-        const menu = new window.mdc.menu.MDCSimpleMenu(menuEl);
+        const menu = new window.mdc.menu.MDCMenu(menuEl);
         menuEl.mdcSimpleMenu = menu;
         return menu;
     };

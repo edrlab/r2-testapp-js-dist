@@ -457,7 +457,7 @@ var initFontSelector = function () {
     }); }, 100);
 };
 window.addEventListener("DOMContentLoaded", function () {
-    window.mdc.menu.MDCSimpleMenuFoundation.numbers.TRANSITION_DURATION_MS = 200;
+    window.mdc.menu.MDCMenuFoundation.numbers.TRANSITION_DURATION_MS = 200;
     window.document.addEventListener("keydown", function (ev) {
         if (drawer.open) {
             return;
@@ -538,7 +538,7 @@ window.addEventListener("DOMContentLoaded", function () {
     snackBarElem.mdcSnackbar = snackBar;
     snackBar.dismissesOnAction = true;
     var menuFactory = function (menuEl) {
-        var menu = new window.mdc.menu.MDCSimpleMenu(menuEl);
+        var menu = new window.mdc.menu.MDCMenu(menuEl);
         menuEl.mdcSimpleMenu = menu;
         return menu;
     };
