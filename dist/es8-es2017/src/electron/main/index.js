@@ -5,10 +5,11 @@ const path = require("path");
 const status_document_processing_1 = require("r2-lcp-js/dist/es8-es2017/src/lsd/status-document-processing");
 const lcp_1 = require("r2-lcp-js/dist/es8-es2017/src/parser/epub/lcp");
 const publication_download_1 = require("r2-lcp-js/dist/es8-es2017/src/publication-download");
+const sessions_1 = require("r2-navigator-js/dist/es8-es2017/src/electron/common/sessions");
 const browser_window_tracker_1 = require("r2-navigator-js/dist/es8-es2017/src/electron/main/browser-window-tracker");
 const lsd_injectlcpl_1 = require("r2-navigator-js/dist/es8-es2017/src/electron/main/lsd-injectlcpl");
 const readium_css_1 = require("r2-navigator-js/dist/es8-es2017/src/electron/main/readium-css");
-const sessions_1 = require("r2-navigator-js/dist/es8-es2017/src/electron/main/sessions");
+const sessions_2 = require("r2-navigator-js/dist/es8-es2017/src/electron/main/sessions");
 const init_globals_1 = require("r2-shared-js/dist/es8-es2017/src/init-globals");
 const server_1 = require("r2-streamer-js/dist/es8-es2017/src/http/server");
 const UrlUtils_1 = require("r2-utils-js/dist/es8-es2017/src/_utils/http/UrlUtils");
@@ -113,6 +114,7 @@ async function createElectronBrowserWindow(publicationFilePath, publicationUrl) 
     electronBrowserWindow.webContents.on("dom-ready", () => {
         debug("electronBrowserWindow dom-ready " + publicationFilePath + " : " + publicationUrl);
     });
+    publicationUrl = sessions_1.convertHttpUrlToCustomScheme(publicationUrl);
     const urlEncoded = UrlUtils_1.encodeURIComponent_RFC3986(publicationUrl);
     let htmlPath = IS_DEV ? `${__dirname}/../renderer/index.html` : `${__dirname}/index.html`;
     htmlPath = htmlPath.replace(/\\/g, "/");
@@ -123,7 +125,7 @@ async function createElectronBrowserWindow(publicationFilePath, publicationUrl) 
     debug(fullUrl);
     electronBrowserWindow.webContents.loadURL(fullUrl, { extraHeaders: "pragma: no-cache\n" });
 }
-sessions_1.initSessions();
+sessions_2.initSessions();
 electron_1.app.on("ready", () => {
     debug("app ready");
     (async () => {
@@ -146,7 +148,7 @@ electron_1.app.on("ready", () => {
             disableReaders: true,
             disableRemotePubUrl: true,
         });
-        sessions_1.secureSessions(_publicationsServer);
+        sessions_2.secureSessions(_publicationsServer);
         lcp_2.installLcpHandler(_publicationsServer);
         lsd_1.installLsdHandler(_publicationsServer, deviceIDManager);
         const readiumCSSPath = IS_DEV ?

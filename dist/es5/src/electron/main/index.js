@@ -7,10 +7,11 @@ var path = require("path");
 var status_document_processing_1 = require("r2-lcp-js/dist/es5/src/lsd/status-document-processing");
 var lcp_1 = require("r2-lcp-js/dist/es5/src/parser/epub/lcp");
 var publication_download_1 = require("r2-lcp-js/dist/es5/src/publication-download");
+var sessions_1 = require("r2-navigator-js/dist/es5/src/electron/common/sessions");
 var browser_window_tracker_1 = require("r2-navigator-js/dist/es5/src/electron/main/browser-window-tracker");
 var lsd_injectlcpl_1 = require("r2-navigator-js/dist/es5/src/electron/main/lsd-injectlcpl");
 var readium_css_1 = require("r2-navigator-js/dist/es5/src/electron/main/readium-css");
-var sessions_1 = require("r2-navigator-js/dist/es5/src/electron/main/sessions");
+var sessions_2 = require("r2-navigator-js/dist/es5/src/electron/main/sessions");
 var init_globals_1 = require("r2-shared-js/dist/es5/src/init-globals");
 var server_1 = require("r2-streamer-js/dist/es5/src/http/server");
 var UrlUtils_1 = require("r2-utils-js/dist/es5/src/_utils/http/UrlUtils");
@@ -143,6 +144,7 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                     electronBrowserWindow.webContents.on("dom-ready", function () {
                         debug("electronBrowserWindow dom-ready " + publicationFilePath + " : " + publicationUrl);
                     });
+                    publicationUrl = sessions_1.convertHttpUrlToCustomScheme(publicationUrl);
                     urlEncoded = UrlUtils_1.encodeURIComponent_RFC3986(publicationUrl);
                     htmlPath = IS_DEV ? __dirname + "/../renderer/index.html" : __dirname + "/index.html";
                     htmlPath = htmlPath.replace(/\\/g, "/");
@@ -157,7 +159,7 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
         });
     });
 }
-sessions_1.initSessions();
+sessions_2.initSessions();
 electron_1.app.on("ready", function () {
     debug("app ready");
     (function () { return tslib_1.__awaiter(_this, void 0, void 0, function () {
@@ -189,7 +191,7 @@ electron_1.app.on("ready", function () {
                         disableReaders: true,
                         disableRemotePubUrl: true,
                     });
-                    sessions_1.secureSessions(_publicationsServer);
+                    sessions_2.secureSessions(_publicationsServer);
                     lcp_2.installLcpHandler(_publicationsServer);
                     lsd_1.installLsdHandler(_publicationsServer, deviceIDManager);
                     readiumCSSPath = IS_DEV ?

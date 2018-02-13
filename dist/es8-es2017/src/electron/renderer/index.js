@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
 const publication_1 = require("r2-shared-js/dist/es8-es2017/src/models/publication");
+const sessions_1 = require("r2-navigator-js/dist/es8-es2017/src/electron/common/sessions");
 const querystring_1 = require("r2-navigator-js/dist/es8-es2017/src/electron/renderer/common/querystring");
 const index_1 = require("r2-navigator-js/dist/es8-es2017/src/electron/renderer/index");
 const init_globals_1 = require("r2-shared-js/dist/es8-es2017/src/init-globals");
@@ -16,6 +17,14 @@ const index_5 = require("./riots/menuselect/index_");
 const SystemFonts = require("system-font-families");
 const debounce = require("debounce");
 const IS_DEV = (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev");
+electron_1.webFrame.registerURLSchemeAsSecure(sessions_1.READIUM2_ELECTRON_HTTP_PROTOCOL);
+electron_1.webFrame.registerURLSchemeAsPrivileged(sessions_1.READIUM2_ELECTRON_HTTP_PROTOCOL, {
+    allowServiceWorkers: false,
+    bypassCSP: false,
+    corsEnabled: false,
+    secure: true,
+    supportFetchAPI: true,
+});
 const electronStore = new store_electron_1.StoreElectron("readium2-testapp", {
     basicLinkTitles: true,
     styling: {
@@ -81,9 +90,16 @@ const saveReadingLocation = (doc, loc) => {
 index_1.setReadingLocationSaver(saveReadingLocation);
 const queryParams = querystring_1.getURLQueryParams();
 const publicationJsonUrl = queryParams["pub"];
-const pathBase64 = publicationJsonUrl.replace(/.*\/pub\/(.*)\/manifest.json/, "$1");
+console.log(publicationJsonUrl);
+const publicationJsonUrl_ = publicationJsonUrl.startsWith(sessions_1.READIUM2_ELECTRON_HTTP_PROTOCOL) ?
+    sessions_1.convertCustomSchemeToHttpUrl(publicationJsonUrl) : publicationJsonUrl;
+console.log(publicationJsonUrl_);
+const pathBase64 = publicationJsonUrl_.replace(/.*\/pub\/(.*)\/manifest.json/, "$1");
+console.log(pathBase64);
 const pathDecoded = window.atob(pathBase64);
+console.log(pathDecoded);
 const pathFileName = pathDecoded.substr(pathDecoded.replace(/\\/g, "/").lastIndexOf("/") + 1, pathDecoded.length - 1);
+console.log(pathFileName);
 const lcpHint = queryParams["lcpHint"];
 electronStore.onChanged("styling.night", (newValue, oldValue) => {
     if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
