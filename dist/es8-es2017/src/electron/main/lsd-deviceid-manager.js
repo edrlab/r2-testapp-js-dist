@@ -6,15 +6,15 @@ const debug = debug_("r2:testapp#electron/main/lsd-deviceid-manager");
 const LSD_STORE_DEVICEID_ENTRY_PREFIX = "deviceID_";
 function getDeviceIDManager(electronStoreLSD, name) {
     const deviceIDManager = {
-        checkDeviceID(key) {
+        async checkDeviceID(key) {
             const entry = LSD_STORE_DEVICEID_ENTRY_PREFIX + key;
             const lsdStore = electronStoreLSD.get("lsd");
             if (!lsdStore || !lsdStore[entry]) {
-                return undefined;
+                return Promise.resolve(undefined);
             }
-            return lsdStore[entry];
+            return Promise.resolve(lsdStore[entry]);
         },
-        getDeviceID() {
+        async getDeviceID() {
             let id = uuid.v4();
             const lsdStore = electronStoreLSD.get("lsd");
             if (!lsdStore) {
@@ -31,21 +31,22 @@ function getDeviceIDManager(electronStoreLSD, name) {
                     electronStoreLSD.set("lsd", lsdStore);
                 }
             }
-            return id;
+            return Promise.resolve(id);
         },
-        getDeviceNAME() {
-            return name;
+        async getDeviceNAME() {
+            return Promise.resolve(name);
         },
-        recordDeviceID(key) {
+        async recordDeviceID(key) {
             const id = this.getDeviceID();
             const lsdStore = electronStoreLSD.get("lsd");
             if (!lsdStore) {
                 debug("LSD store problem?!");
-                return;
+                return Promise.reject("Cannot get LSD store?");
             }
             const entry = LSD_STORE_DEVICEID_ENTRY_PREFIX + key;
             lsdStore[entry] = id;
             electronStoreLSD.set("lsd", lsdStore);
+            return Promise.resolve();
         },
     };
     return deviceIDManager;

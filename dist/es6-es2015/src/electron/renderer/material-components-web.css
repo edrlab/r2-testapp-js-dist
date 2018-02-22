@@ -1,5 +1,5 @@
 /*!
- Material Components for the web
+ Material Components for the Web
  Copyright (c) 2018 Google Inc.
  License: Apache-2.0
 */
@@ -159,7 +159,8 @@
     content: ""; }
   .mdc-button::before {
     -webkit-transition: opacity 15ms linear;
-    transition: opacity 15ms linear; }
+    transition: opacity 15ms linear;
+    z-index: 1; }
   .mdc-button.mdc-ripple-upgraded::before {
     -webkit-transform: scale(var(--mdc-ripple-fg-scale, 1));
             transform: scale(var(--mdc-ripple-fg-scale, 1)); }
@@ -230,6 +231,14 @@
     opacity: 0.16; }
   .mdc-button.mdc-ripple-upgraded {
     --mdc-ripple-fg-opacity: 0.16; }
+  .mdc-button .mdc-button__icon {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    font-size: 18px;
+    line-height: inherit;
+    vertical-align: top; }
 
 .mdc-button--raised:disabled,
 .mdc-button--unelevated:disabled {
@@ -334,15 +343,6 @@
   height: 32px;
   font-size: .8125rem;
   line-height: 32px; }
-
-.mdc-button__icon {
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  margin-right: 8px;
-  font-size: 18px;
-  line-height: inherit;
-  vertical-align: top; }
 
 /**
  * The css property used for elevation. In most cases this should not be changed. It is exposed
@@ -579,6 +579,95 @@
   -webkit-box-sizing: border-box;
           box-sizing: border-box; }
 
+.mdc-card__primary-action {
+  --mdc-ripple-fg-size: 0;
+  --mdc-ripple-left: 0;
+  --mdc-ripple-top: 0;
+  --mdc-ripple-fg-scale: 1;
+  --mdc-ripple-fg-translate-end: 0;
+  --mdc-ripple-fg-translate-start: 0;
+  -webkit-tap-highlight-color: transparent;
+  will-change: transform, opacity;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  position: relative;
+  outline: none;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  overflow: hidden; }
+  .mdc-card__primary-action::before, .mdc-card__primary-action::after {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+    content: ""; }
+  .mdc-card__primary-action::before {
+    -webkit-transition: opacity 15ms linear;
+    transition: opacity 15ms linear;
+    z-index: 1; }
+  .mdc-card__primary-action.mdc-ripple-upgraded::before {
+    -webkit-transform: scale(var(--mdc-ripple-fg-scale, 1));
+            transform: scale(var(--mdc-ripple-fg-scale, 1)); }
+  .mdc-card__primary-action.mdc-ripple-upgraded::after {
+    top: 0;
+    left: 0;
+    -webkit-transform: scale(0);
+            transform: scale(0);
+    -webkit-transform-origin: center center;
+            transform-origin: center center; }
+  .mdc-card__primary-action.mdc-ripple-upgraded--unbounded::after {
+    top: var(--mdc-ripple-top, 0);
+    left: var(--mdc-ripple-left, 0); }
+  .mdc-card__primary-action.mdc-ripple-upgraded--foreground-activation::after {
+    -webkit-animation: 225ms mdc-ripple-fg-radius-in forwards, 75ms mdc-ripple-fg-opacity-in forwards;
+            animation: 225ms mdc-ripple-fg-radius-in forwards, 75ms mdc-ripple-fg-opacity-in forwards; }
+  .mdc-card__primary-action.mdc-ripple-upgraded--foreground-deactivation::after {
+    -webkit-animation: 150ms mdc-ripple-fg-opacity-out;
+            animation: 150ms mdc-ripple-fg-opacity-out;
+    -webkit-transform: translate(var(--mdc-ripple-fg-translate-end, 0)) scale(var(--mdc-ripple-fg-scale, 1));
+            transform: translate(var(--mdc-ripple-fg-translate-end, 0)) scale(var(--mdc-ripple-fg-scale, 1)); }
+  .mdc-card__primary-action::before, .mdc-card__primary-action::after {
+    top: calc(50% - 100%);
+    left: calc(50% - 100%);
+    width: 200%;
+    height: 200%; }
+  .mdc-card__primary-action.mdc-ripple-upgraded::after {
+    width: var(--mdc-ripple-fg-size, 100%);
+    height: var(--mdc-ripple-fg-size, 100%); }
+  .mdc-card__primary-action::before, .mdc-card__primary-action::after {
+    background-color: black; }
+  .mdc-card__primary-action:hover::before {
+    opacity: 0.04; }
+  .mdc-card__primary-action:not(.mdc-ripple-upgraded):focus::before, .mdc-card__primary-action.mdc-ripple-upgraded--background-focused::before {
+    -webkit-transition-duration: 75ms;
+            transition-duration: 75ms;
+    opacity: 0.12; }
+  .mdc-card__primary-action:not(.mdc-ripple-upgraded)::after {
+    -webkit-transition: opacity 150ms linear;
+    transition: opacity 150ms linear; }
+  .mdc-card__primary-action:not(.mdc-ripple-upgraded):active::after {
+    -webkit-transition-duration: 75ms;
+            transition-duration: 75ms;
+    opacity: 0.16; }
+  .mdc-card__primary-action.mdc-ripple-upgraded {
+    --mdc-ripple-fg-opacity: 0.16; }
+
+.mdc-card__primary-action:first-child {
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit; }
+
+.mdc-card__primary-action:last-child {
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit; }
+
 .mdc-card__actions {
   display: -webkit-box;
   display: -ms-flexbox;
@@ -644,7 +733,9 @@
           align-items: center;
   -webkit-box-sizing: border-box;
           box-sizing: border-box;
-  min-width: auto;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
   cursor: pointer;
   -webkit-user-select: none;
      -moz-user-select: none;
@@ -1056,7 +1147,8 @@
     content: ""; }
   .mdc-checkbox::before {
     -webkit-transition: opacity 15ms linear;
-    transition: opacity 15ms linear; }
+    transition: opacity 15ms linear;
+    z-index: 1; }
   .mdc-checkbox.mdc-ripple-upgraded::before {
     -webkit-transform: scale(var(--mdc-ripple-fg-scale, 1));
             transform: scale(var(--mdc-ripple-fg-scale, 1)); }
@@ -1416,13 +1508,22 @@
   --mdc-ripple-fg-translate-start: 0;
   -webkit-tap-highlight-color: transparent;
   will-change: transform, opacity;
-  display: inline-block;
   border-radius: 16px;
-  background: rgba(0, 0, 0, 0.08);
+  background-color: rgba(0, 0, 0, 0.08);
+  /* @alternate */
   color: rgba(0, 0, 0, 0.87);
+  color: var(--mdc-theme-text-primary-on-light, rgba(0, 0, 0, 0.87));
+  display: -webkit-inline-box;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  position: relative;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  margin: 4px;
   padding: 7px 12px;
-  margin: 5px;
   cursor: pointer;
+  outline: none;
   overflow: hidden; }
   .mdc-chip::before, .mdc-chip::after {
     position: absolute;
@@ -1432,7 +1533,8 @@
     content: ""; }
   .mdc-chip::before {
     -webkit-transition: opacity 15ms linear;
-    transition: opacity 15ms linear; }
+    transition: opacity 15ms linear;
+    z-index: 1; }
   .mdc-chip.mdc-ripple-upgraded::before {
     -webkit-transform: scale(var(--mdc-ripple-fg-scale, 1));
             transform: scale(var(--mdc-ripple-fg-scale, 1)); }
@@ -1463,7 +1565,11 @@
     width: var(--mdc-ripple-fg-size, 100%);
     height: var(--mdc-ripple-fg-size, 100%); }
   .mdc-chip::before, .mdc-chip::after {
-    background-color: black; }
+    /* @alternate */
+    background-color: rgba(0, 0, 0, 0.87); }
+    @supports not (-ms-ime-align: auto) {
+      .mdc-chip::before, .mdc-chip::after {
+        background-color: var(--mdc-theme-text-primary-on-light, rgba(0, 0, 0, 0.87)); } }
   .mdc-chip:hover::before {
     opacity: 0.04; }
   .mdc-chip:not(.mdc-ripple-upgraded):focus::before, .mdc-chip.mdc-ripple-upgraded--background-focused::before {
@@ -1481,9 +1587,28 @@
     --mdc-ripple-fg-opacity: 0.16; }
 
 .mdc-chip__text {
-  display: inline-block;
-  vertical-align: middle;
   line-height: 17px; }
+
+.mdc-chip__icon {
+  color: rgba(0, 0, 0, 0.54);
+  vertical-align: middle;
+  border-radius: 50%;
+  outline: none; }
+
+.mdc-chip__icon--leading {
+  margin: -4px 4px -4px -4px; }
+
+.mdc-chip__icon--trailing {
+  margin: 0 -4px 0 4px; }
+  .mdc-chip__icon--trailing:hover {
+    color: rgba(0, 0, 0, 0.62); }
+  .mdc-chip__icon--trailing:focus {
+    color: rgba(0, 0, 0, 0.87); }
+
+.mdc-chip__icon.mdc-chip__icon--trailing {
+  width: 18px;
+  height: 18px;
+  font-size: 18px; }
 
 /**
  * The css property used for elevation. In most cases this should not be changed. It is exposed
@@ -3260,7 +3385,8 @@
     content: ""; }
   .mdc-fab::before {
     -webkit-transition: opacity 15ms linear;
-    transition: opacity 15ms linear; }
+    transition: opacity 15ms linear;
+    z-index: 1; }
   .mdc-fab.mdc-ripple-upgraded::before {
     -webkit-transform: scale(var(--mdc-ripple-fg-scale, 1));
             transform: scale(var(--mdc-ripple-fg-scale, 1)); }
@@ -3928,7 +4054,8 @@
     content: ""; }
   .mdc-icon-toggle::before {
     -webkit-transition: opacity 15ms linear;
-    transition: opacity 15ms linear; }
+    transition: opacity 15ms linear;
+    z-index: 1; }
   .mdc-icon-toggle.mdc-ripple-upgraded::before {
     -webkit-transform: scale(var(--mdc-ripple-fg-scale, 1));
             transform: scale(var(--mdc-ripple-fg-scale, 1)); }
@@ -5320,7 +5447,8 @@
     content: ""; }
   :not(.mdc-list--non-interactive) > .mdc-list-item::before {
     -webkit-transition: opacity 15ms linear;
-    transition: opacity 15ms linear; }
+    transition: opacity 15ms linear;
+    z-index: 1; }
   :not(.mdc-list--non-interactive) > .mdc-list-item.mdc-ripple-upgraded::before {
     -webkit-transform: scale(var(--mdc-ripple-fg-scale, 1));
             transform: scale(var(--mdc-ripple-fg-scale, 1)); }
@@ -5516,6 +5644,9 @@ a.mdc-list-item {
 .mdc-menu {
   -webkit-box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12);
           box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12);
+  /* @alternate */
+  background-color: #fff;
+  background-color: var(--mdc-theme-background, #fff);
   display: none;
   position: absolute;
   -webkit-box-sizing: border-box;
@@ -5530,7 +5661,6 @@ a.mdc-list-item {
   -webkit-transform-origin: top left;
           transform-origin: top left;
   border-radius: 2px;
-  background-color: #fff;
   opacity: 0;
   white-space: nowrap;
   overflow-x: hidden;
@@ -5666,7 +5796,8 @@ a.mdc-list-item {
     content: ""; }
   .mdc-radio::before {
     -webkit-transition: opacity 15ms linear;
-    transition: opacity 15ms linear; }
+    transition: opacity 15ms linear;
+    z-index: 1; }
   .mdc-radio.mdc-ripple-upgraded::before {
     -webkit-transform: scale(var(--mdc-ripple-fg-scale, 1));
             transform: scale(var(--mdc-ripple-fg-scale, 1)); }
@@ -5856,7 +5987,8 @@ a.mdc-list-item {
     content: ""; }
   .mdc-ripple-surface::before {
     -webkit-transition: opacity 15ms linear;
-    transition: opacity 15ms linear; }
+    transition: opacity 15ms linear;
+    z-index: 1; }
   .mdc-ripple-surface.mdc-ripple-upgraded::before {
     -webkit-transform: scale(var(--mdc-ripple-fg-scale, 1));
             transform: scale(var(--mdc-ripple-fg-scale, 1)); }
@@ -6114,6 +6246,182 @@ a.mdc-list-item {
  * ```
  * An optional third $root-selector argument may also be given, which is passed to `mdc-rtl`.
  */
+/**
+ * Creates a rule that will be applied when an MDC Web component is within the context of an RTL layout.
+ *
+ * Usage Example:
+ * ```scss
+ * .mdc-foo {
+ *   position: absolute;
+ *   left: 0;
+ *
+ *   @include mdc-rtl {
+ *     left: auto;
+ *     right: 0;
+ *   }
+ *
+ *   &__bar {
+ *     margin-left: 4px;
+ *     @include mdc-rtl(".mdc-foo") {
+ *       margin-left: auto;
+ *       margin-right: 4px;
+ *     }
+ *   }
+ * }
+ *
+ * .mdc-foo--mod {
+ *   padding-left: 4px;
+ *
+ *   @include mdc-rtl {
+ *     padding-left: auto;
+ *     padding-right: 4px;
+ *   }
+ * }
+ * ```
+ *
+ * Note that this works by checking for [dir="rtl"] on an ancestor element. While this will work
+ * in most cases, it will in some cases lead to false negatives, e.g.
+ *
+ * ```html
+ * <html dir="rtl">
+ *   <!-- ... -->
+ *   <div dir="ltr">
+ *     <div class="mdc-foo">Styled incorrectly as RTL!</div>
+ *   </div>
+ * </html>
+ * ```
+ *
+ * In the future, selectors such as :dir (http://mdn.io/:dir) will help us mitigate this.
+ */
+/**
+ * Takes a base box-model property - e.g. margin / border / padding - along with a default
+ * direction and value, and emits rules which apply the value to the
+ * "<base-property>-<default-direction>" property by default, but flips the direction
+ * when within an RTL context.
+ *
+ * For example:
+ *
+ * ```scss
+ * .mdc-foo {
+ *   @include mdc-rtl-reflexive-box(margin, left, 8px);
+ * }
+ * ```
+ * is equivalent to:
+ *
+ * ```scss
+ * .mdc-foo {
+ *   margin-left: 8px;
+ *
+ *   @include mdc-rtl {
+ *     margin-right: 8px;
+ *     margin-left: 0;
+ *   }
+ * }
+ * ```
+ * whereas:
+ *
+ * ```scss
+ * .mdc-foo {
+ *   @include mdc-rtl-reflexive-box(margin, right, 8px);
+ * }
+ * ```
+ * is equivalent to:
+ *
+ * ```scss
+ * .mdc-foo {
+ *   margin-right: 8px;
+ *
+ *   @include mdc-rtl {
+ *     margin-right: 0;
+ *     margin-left: 8px;
+ *   }
+ * }
+ * ```
+ *
+ * You can also pass a 4th optional $root-selector argument which will be forwarded to `mdc-rtl`,
+ * e.g. `@include mdc-rtl-reflexive-box(margin, left, 8px, ".mdc-component")`.
+ *
+ * Note that this function will always zero out the original value in an RTL context. If you're
+ * trying to flip the values, use mdc-rtl-reflexive-property().
+ */
+/**
+ * Takes a base property and emits rules that assign <base-property>-left to <left-value> and
+ * <base-property>-right to <right-value> in a LTR context, and vice versa in a RTL context.
+ * For example:
+ *
+ * ```scss
+ * .mdc-foo {
+ *   @include mdc-rtl-reflexive-property(margin, auto, 12px);
+ * }
+ * ```
+ * is equivalent to:
+ *
+ * ```scss
+ * .mdc-foo {
+ *   margin-left: auto;
+ *   margin-right: 12px;
+ *
+ *   @include mdc-rtl {
+ *     margin-left: 12px;
+ *     margin-right: auto;
+ *   }
+ * }
+ * ```
+ *
+ * A 4th optional $root-selector argument can be given, which will be passed to `mdc-rtl`.
+ */
+/**
+ * Takes an argument specifying a horizontal position property (either "left" or "right") as well
+ * as a value, and applies that value to the specified position in a LTR context, and flips it in a
+ * RTL context. For example:
+ *
+ * ```scss
+ * .mdc-foo {
+ *   @include mdc-rtl-reflexive-position(left, 0);
+ *   position: absolute;
+ * }
+ * ```
+ * is equivalent to:
+ *
+ * ```scss
+ *  .mdc-foo {
+ *    position: absolute;
+ *    left: 0;
+ *    right: initial;
+ *
+ *    @include mdc-rtl {
+ *      right: 0;
+ *      left: initial;
+ *    }
+ *  }
+ * ```
+ * An optional third $root-selector argument may also be given, which is passed to `mdc-rtl`.
+ */
+.mdc-select__label {
+  left: 0;
+  right: initial;
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  -webkit-transform-origin: left top;
+          transform-origin: left top;
+  -webkit-transition: -webkit-transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: -webkit-transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  will-change: transform; }
+  [dir="rtl"] .mdc-select__label, .mdc-select__label[dir="rtl"] {
+    left: initial;
+    right: 0; }
+  .mdc-select[dir="rtl"] .mdc-select__label,
+  [dir="rtl"] .mdc-select .mdc-select__label {
+    -webkit-transform-origin: right top;
+            transform-origin: right top; }
+  .mdc-select__label--float-above {
+    -webkit-transform: translateY(-100%) scale(0.75);
+            transform: translateY(-100%) scale(0.75); }
+
 .mdc-select {
   font-family: Roboto, sans-serif;
   -moz-osx-font-smoothing: grayscale;
@@ -6160,12 +6468,8 @@ a.mdc-list-item {
     /* @alternate */
     background-color: #6200ee;
     background-color: var(--mdc-theme-primary, #6200ee); }
-  .mdc-select:not(.mdc-select--disabled) .mdc-select__surface:focus .mdc-select__label {
-    /* @alternate */
-    color: #6200ee;
-    color: var(--mdc-theme-primary, #6200ee); }
-  .mdc-select:not(.mdc-select--disabled) .mdc-select__surface:focus .mdc-select__label--float-above {
-    opacity: 0.87; }
+  .mdc-select:not(.mdc-select--disabled) .mdc-select__surface:focus .mdc-select__label, .mdc-select:not(.mdc-select--disabled).mdc-select--open .mdc-select__label {
+    color: rgba(98, 0, 238, 0.87); }
   [dir="rtl"] .mdc-select, .mdc-select[dir="rtl"] {
     background-position: left 8px bottom 8px; }
   .mdc-select__menu {
@@ -6212,30 +6516,6 @@ a.mdc-list-item {
       opacity: 0.16; }
     .mdc-select__surface.mdc-ripple-upgraded {
       --mdc-ripple-fg-opacity: 0.16; }
-  .mdc-select__label {
-    left: 0;
-    right: initial;
-    position: absolute;
-    bottom: 8px;
-    left: 0;
-    -webkit-transform-origin: left top;
-            transform-origin: left top;
-    -webkit-transition: -webkit-transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
-    transition: -webkit-transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
-    transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
-    transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: none;
-    will-change: transform; }
-    [dir="rtl"] .mdc-select__label, .mdc-select__label[dir="rtl"] {
-      left: initial;
-      right: 0; }
-    .mdc-select[dir="rtl"] .mdc-select__label,
-    [dir="rtl"] .mdc-select .mdc-select__label {
-      -webkit-transform-origin: right top;
-              transform-origin: right top; }
-    .mdc-select__label--float-above {
-      -webkit-transform: translateY(-100%) scale(0.75);
-              transform: translateY(-100%) scale(0.75); }
   .mdc-select__selected-text {
     display: -webkit-box;
     display: -ms-flexbox;
@@ -6329,7 +6609,8 @@ a.mdc-list-item {
       content: ""; }
     .mdc-select--box .mdc-select__surface::before {
       -webkit-transition: opacity 15ms linear;
-      transition: opacity 15ms linear; }
+      transition: opacity 15ms linear;
+      z-index: 1; }
     .mdc-select--box .mdc-select__surface.mdc-ripple-upgraded::before {
       -webkit-transform: scale(var(--mdc-ripple-fg-scale, 1));
               transform: scale(var(--mdc-ripple-fg-scale, 1)); }
@@ -6403,9 +6684,7 @@ a.mdc-list-item {
       -ms-user-select: none;
           user-select: none; }
   .mdc-select--disabled .mdc-select__label {
-    /* @alternate */
-    color: rgba(0, 0, 0, 0.38);
-    color: var(--mdc-theme-text-disabled-on-light, rgba(0, 0, 0, 0.38)); }
+    color: black; }
   .mdc-select--disabled .mdc-select__bottom-line {
     display: none; }
 
@@ -7181,24 +7460,6 @@ a.mdc-list-item {
 .mdc-switch {
   display: inline-block;
   position: relative; }
-  .mdc-switch .mdc-switch__native-control:enabled:not(:checked) ~ .mdc-switch__background::before {
-    background-color: #000; }
-  .mdc-switch .mdc-switch__native-control:enabled:not(:checked) ~ .mdc-switch__background .mdc-switch__knob {
-    background-color: #fafafa; }
-  .mdc-switch .mdc-switch__native-control:enabled:not(:checked) ~ .mdc-switch__background .mdc-switch__knob::before {
-    background-color: #9e9e9e; }
-  .mdc-switch .mdc-switch__native-control:enabled:checked ~ .mdc-switch__background::before {
-    /* @alternate */
-    background-color: #018786;
-    background-color: var(--mdc-theme-secondary, #018786); }
-  .mdc-switch .mdc-switch__native-control:enabled:checked ~ .mdc-switch__background .mdc-switch__knob {
-    /* @alternate */
-    background-color: #018786;
-    background-color: var(--mdc-theme-secondary, #018786); }
-  .mdc-switch .mdc-switch__native-control:enabled:checked ~ .mdc-switch__background .mdc-switch__knob::before {
-    /* @alternate */
-    background-color: #018786;
-    background-color: var(--mdc-theme-secondary, #018786); }
   .mdc-switch__native-control {
     position: absolute;
     top: -14px;
@@ -7217,84 +7478,98 @@ a.mdc-list-item {
     .mdc-switch__native-control:checked {
       -webkit-transform: translateX(14px);
               transform: translateX(14px); }
-  .mdc-switch__background {
-    display: block;
-    position: relative;
-    width: 34px;
-    height: 14px;
-    border-radius: 7px;
-    outline: none;
-    -webkit-user-select: none;
-       -moz-user-select: none;
-        -ms-user-select: none;
-            user-select: none; }
-    .mdc-switch__background::before {
-      display: block;
-      position: absolute;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      -webkit-transition: opacity 90ms cubic-bezier(0.4, 0, 0.2, 1), background-color 90ms cubic-bezier(0.4, 0, 0.2, 1);
-      transition: opacity 90ms cubic-bezier(0.4, 0, 0.2, 1), background-color 90ms cubic-bezier(0.4, 0, 0.2, 1);
-      border-radius: 7px;
-      opacity: .38;
-      content: ""; }
-    .mdc-switch__background .mdc-switch__knob {
-      -webkit-box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12);
-              box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12);
-      display: block;
-      position: absolute;
-      top: -3px;
-      left: 0;
-      width: 20px;
-      height: 20px;
-      -webkit-transform: translateX(0);
-              transform: translateX(0);
-      -webkit-transition: background-color 90ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-transform 90ms cubic-bezier(0.4, 0, 0.2, 1);
-      transition: background-color 90ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-transform 90ms cubic-bezier(0.4, 0, 0.2, 1);
-      transition: transform 90ms cubic-bezier(0.4, 0, 0.2, 1), background-color 90ms cubic-bezier(0.4, 0, 0.2, 1);
-      transition: transform 90ms cubic-bezier(0.4, 0, 0.2, 1), background-color 90ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-transform 90ms cubic-bezier(0.4, 0, 0.2, 1);
-      border-radius: 10px;
-      z-index: 1; }
-      .mdc-switch__background .mdc-switch__knob::before {
-        position: absolute;
-        top: -14px;
-        left: -14px;
-        width: 48px;
-        height: 48px;
-        -webkit-transform: scale(0);
-                transform: scale(0);
-        -webkit-transition: background-color 90ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-transform 90ms cubic-bezier(0.4, 0, 0.2, 1);
-        transition: background-color 90ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-transform 90ms cubic-bezier(0.4, 0, 0.2, 1);
-        transition: transform 90ms cubic-bezier(0.4, 0, 0.2, 1), background-color 90ms cubic-bezier(0.4, 0, 0.2, 1);
-        transition: transform 90ms cubic-bezier(0.4, 0, 0.2, 1), background-color 90ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-transform 90ms cubic-bezier(0.4, 0, 0.2, 1);
-        border-radius: 24px;
-        opacity: .2;
-        content: ""; }
 
-.mdc-switch__native-control:focus ~ .mdc-switch__background .mdc-switch__knob::before {
+.mdc-switch__native-control:enabled:not(:checked) ~ .mdc-switch__background::before {
+  background-color: #000; }
+
+.mdc-switch__native-control:enabled:not(:checked) ~ .mdc-switch__background .mdc-switch__knob {
+  background-color: #fafafa; }
+
+.mdc-switch__native-control:enabled:not(:checked) ~ .mdc-switch__background .mdc-switch__knob::before {
+  background-color: #9e9e9e; }
+
+.mdc-switch__native-control:enabled:checked ~ .mdc-switch__background::before {
+  /* @alternate */
+  background-color: #018786;
+  background-color: var(--mdc-theme-secondary, #018786); }
+
+.mdc-switch__native-control:enabled:checked ~ .mdc-switch__background .mdc-switch__knob {
+  /* @alternate */
+  background-color: #018786;
+  background-color: var(--mdc-theme-secondary, #018786); }
+
+.mdc-switch__native-control:enabled:checked ~ .mdc-switch__background .mdc-switch__knob::before {
+  /* @alternate */
+  background-color: #018786;
+  background-color: var(--mdc-theme-secondary, #018786); }
+
+.mdc-switch__background {
+  display: block;
+  position: relative;
+  width: 34px;
+  height: 14px;
+  border-radius: 50%;
+  outline: none;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none; }
+  .mdc-switch__background::before {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    -webkit-transition: opacity 90ms cubic-bezier(0.4, 0, 0.2, 1), background-color 90ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 90ms cubic-bezier(0.4, 0, 0.2, 1), background-color 90ms cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 7px;
+    opacity: .38;
+    content: ""; }
+
+.mdc-switch__knob {
+  -webkit-box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12);
+          box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12);
+  display: block;
   position: absolute;
-  width: 48px;
-  height: 48px;
-  -webkit-transform: scale(1);
-          transform: scale(1);
+  top: -3px;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  -webkit-transform: translateX(0);
+          transform: translateX(0);
   -webkit-transition: background-color 90ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-transform 90ms cubic-bezier(0.4, 0, 0.2, 1);
   transition: background-color 90ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-transform 90ms cubic-bezier(0.4, 0, 0.2, 1);
   transition: transform 90ms cubic-bezier(0.4, 0, 0.2, 1), background-color 90ms cubic-bezier(0.4, 0, 0.2, 1);
   transition: transform 90ms cubic-bezier(0.4, 0, 0.2, 1), background-color 90ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-transform 90ms cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 24px; }
+  border-radius: 50%;
+  z-index: 1; }
+  .mdc-switch__knob::before {
+    position: absolute;
+    top: -14px;
+    left: -14px;
+    width: 48px;
+    height: 48px;
+    -webkit-transform: scale(0);
+            transform: scale(0);
+    -webkit-transition: background-color 90ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-transform 90ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 90ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-transform 90ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 90ms cubic-bezier(0.4, 0, 0.2, 1), background-color 90ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 90ms cubic-bezier(0.4, 0, 0.2, 1), background-color 90ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-transform 90ms cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 50%;
+    opacity: .2;
+    content: ""; }
+
+.mdc-switch__native-control:focus ~ .mdc-switch__background .mdc-switch__knob::before {
+  -webkit-transform: scale(1);
+          transform: scale(1); }
 
 .mdc-switch__native-control:checked ~ .mdc-switch__background::before {
   opacity: .5; }
 
 .mdc-switch__native-control:checked ~ .mdc-switch__background .mdc-switch__knob {
   -webkit-transform: translateX(14px);
-          transform: translateX(14px);
-  -webkit-transition: background-color 90ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-transform 90ms cubic-bezier(0.4, 0, 0.2, 1);
-  transition: background-color 90ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-transform 90ms cubic-bezier(0.4, 0, 0.2, 1);
-  transition: transform 90ms cubic-bezier(0.4, 0, 0.2, 1), background-color 90ms cubic-bezier(0.4, 0, 0.2, 1);
-  transition: transform 90ms cubic-bezier(0.4, 0, 0.2, 1), background-color 90ms cubic-bezier(0.4, 0, 0.2, 1), -webkit-transform 90ms cubic-bezier(0.4, 0, 0.2, 1); }
+          transform: translateX(14px); }
   .mdc-switch__native-control:checked ~ .mdc-switch__background .mdc-switch__knob::before {
     opacity: .15; }
 
@@ -7356,7 +7631,8 @@ a.mdc-list-item {
     content: ""; }
   .mdc-tab::before {
     -webkit-transition: opacity 15ms linear;
-    transition: opacity 15ms linear; }
+    transition: opacity 15ms linear;
+    z-index: 1; }
   .mdc-tab.mdc-ripple-upgraded::before {
     -webkit-transform: scale(var(--mdc-ripple-fg-scale, 1));
             transform: scale(var(--mdc-ripple-fg-scale, 1)); }
@@ -8864,7 +9140,8 @@ a.mdc-list-item {
     content: ""; }
   .mdc-text-field__outline::before {
     -webkit-transition: opacity 15ms linear;
-    transition: opacity 15ms linear; }
+    transition: opacity 15ms linear;
+    z-index: 1; }
   .mdc-text-field__outline.mdc-ripple-upgraded::before {
     -webkit-transform: scale(var(--mdc-ripple-fg-scale, 1));
             transform: scale(var(--mdc-ripple-fg-scale, 1)); }
@@ -9107,7 +9384,8 @@ a.mdc-list-item {
     content: ""; }
   .mdc-text-field--box::before {
     -webkit-transition: opacity 15ms linear;
-    transition: opacity 15ms linear; }
+    transition: opacity 15ms linear;
+    z-index: 1; }
   .mdc-text-field--box.mdc-ripple-upgraded::before {
     -webkit-transform: scale(var(--mdc-ripple-fg-scale, 1));
             transform: scale(var(--mdc-ripple-fg-scale, 1)); }
@@ -9417,6 +9695,9 @@ a.mdc-list-item {
       padding: 0;
       resize: none;
       border: none !important; }
+
+.mdc-text-field--fullwidth.mdc-text-field--invalid:not(.mdc-text-field--disabled):not(.mdc-text-field--textarea) {
+  border-bottom-color: #d50000; }
 
 .mdc-text-field--dense + .mdc-text-field-helper-text {
   margin-bottom: 4px; }
@@ -10523,3 +10804,5 @@ a.mdc-list-item {
 
 .mdc-typography--adjust-margin.mdc-typography--button {
   margin: inherit; }
+
+/*# sourceMappingURL=material-components-web.css.map*/
