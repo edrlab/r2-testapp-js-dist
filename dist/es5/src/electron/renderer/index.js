@@ -382,6 +382,10 @@ var initFontSelector = function () {
             label: "Readable (dys)",
             style: "font-family: AccessibleDfa;",
         }, {
+            id: ID_PREFIX + "DUO",
+            label: "Duospace",
+            style: "font-family: \"IA Writer Duospace\", Consolas, monospace;",
+        }, {
             id: ID_PREFIX + "MONO",
             label: "Monospace",
             style: "font-family: \"Andale Mono\", Consolas, monospace;",
