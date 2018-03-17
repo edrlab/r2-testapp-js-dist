@@ -63,28 +63,29 @@ electron_1.ipcMain.on(events_1.R2_EVENT_DEVTOOLS, function (_event, _arg) {
 function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
     return tslib_1.__awaiter(this, void 0, void 0, function () {
         var _this = this;
-        var publication, err_1, lcpHint, err_2, electronBrowserWindow, urlEncoded, htmlPath, fullUrl;
+        var lcpHint, publication_1, err_1, err_2, electronBrowserWindow, urlEncoded, htmlPath, fullUrl;
         return tslib_1.__generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     debug("createElectronBrowserWindow() " + publicationFilePath + " : " + publicationUrl);
+                    if (!(publicationFilePath.indexOf("http") !== 0)) return [3, 9];
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
                     return [4, _publicationsServer.loadOrGetCachedPublication(publicationFilePath)];
                 case 2:
-                    publication = _a.sent();
+                    publication_1 = _a.sent();
                     return [3, 4];
                 case 3:
                     err_1 = _a.sent();
                     debug(err_1);
                     return [2];
                 case 4:
-                    if (!(publication && publication.LCP)) return [3, 9];
+                    if (!(publication_1 && publication_1.LCP)) return [3, 9];
                     _a.label = 5;
                 case 5:
                     _a.trys.push([5, 7, , 8]);
-                    return [4, status_document_processing_1.launchStatusDocumentProcessing(publication.LCP, deviceIDManager, function (licenseUpdateJson) { return tslib_1.__awaiter(_this, void 0, void 0, function () {
+                    return [4, status_document_processing_1.launchStatusDocumentProcessing(publication_1.LCP, deviceIDManager, function (licenseUpdateJson) { return tslib_1.__awaiter(_this, void 0, void 0, function () {
                             var res, err_3;
                             return tslib_1.__generator(this, function (_a) {
                                 switch (_a.label) {
@@ -95,7 +96,7 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                                         _a.label = 1;
                                     case 1:
                                         _a.trys.push([1, 3, , 4]);
-                                        return [4, lsd_injectlcpl_1.lsdLcpUpdateInject(licenseUpdateJson, publication, publicationFilePath)];
+                                        return [4, lsd_injectlcpl_1.lsdLcpUpdateInject(licenseUpdateJson, publication_1, publicationFilePath)];
                                     case 2:
                                         res = _a.sent();
                                         debug("EPUB SAVED: " + res);
@@ -116,10 +117,10 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                     debug(err_2);
                     return [3, 8];
                 case 8:
-                    if (publication.LCP.Encryption &&
-                        publication.LCP.Encryption.UserKey &&
-                        publication.LCP.Encryption.UserKey.TextHint) {
-                        lcpHint = publication.LCP.Encryption.UserKey.TextHint;
+                    if (publication_1.LCP.Encryption &&
+                        publication_1.LCP.Encryption.UserKey &&
+                        publication_1.LCP.Encryption.UserKey.TextHint) {
+                        lcpHint = publication_1.LCP.Encryption.UserKey.TextHint;
                     }
                     if (!lcpHint) {
                         lcpHint = "LCP passphrase";
@@ -144,7 +145,9 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                     electronBrowserWindow.webContents.on("dom-ready", function () {
                         debug("electronBrowserWindow dom-ready " + publicationFilePath + " : " + publicationUrl);
                     });
-                    publicationUrl = sessions_1.convertHttpUrlToCustomScheme(publicationUrl);
+                    if (publicationFilePath.indexOf("http") !== 0) {
+                        publicationUrl = sessions_1.convertHttpUrlToCustomScheme(publicationUrl);
+                    }
                     urlEncoded = UrlUtils_1.encodeURIComponent_RFC3986(publicationUrl);
                     htmlPath = IS_DEV ? __dirname + "/../renderer/index.html" : __dirname + "/index.html";
                     htmlPath = htmlPath.replace(/\\/g, "/");
@@ -261,39 +264,46 @@ electron_1.app.on("ready", function () {
                                     args = process.argv.slice(2);
                                     debug("args:");
                                     debug(args);
-                                    if (args && args.length && args[0]) {
-                                        argPath = args[0].trim();
-                                        filePath = argPath;
+                                    if (!(args && args.length && args[0])) return [3, 3];
+                                    argPath = args[0].trim();
+                                    filePath = argPath;
+                                    debug(filePath);
+                                    if (!(filePath.indexOf("http") === 0)) return [3, 2];
+                                    return [4, openFile(filePath)];
+                                case 1:
+                                    _a.sent();
+                                    return [2];
+                                case 2:
+                                    if (!fs.existsSync(filePath)) {
+                                        filePath = path.join(__dirname, argPath);
                                         debug(filePath);
                                         if (!fs.existsSync(filePath)) {
-                                            filePath = path.join(__dirname, argPath);
+                                            filePath = path.join(process.cwd(), argPath);
                                             debug(filePath);
                                             if (!fs.existsSync(filePath)) {
-                                                filePath = path.join(process.cwd(), argPath);
-                                                debug(filePath);
-                                                if (!fs.existsSync(filePath)) {
-                                                    debug("FILEPATH DOES NOT EXIST: " + filePath);
-                                                }
-                                                else {
-                                                    filePathToLoadOnLaunch = filePath;
-                                                }
+                                                debug("FILEPATH DOES NOT EXIST: " + filePath);
                                             }
                                             else {
                                                 filePathToLoadOnLaunch = filePath;
                                             }
                                         }
                                         else {
-                                            filePath = fs.realpathSync(filePath);
-                                            debug(filePath);
                                             filePathToLoadOnLaunch = filePath;
                                         }
                                     }
-                                    if (!filePathToLoadOnLaunch) return [3, 2];
+                                    else {
+                                        filePath = fs.realpathSync(filePath);
+                                        debug(filePath);
+                                        filePathToLoadOnLaunch = filePath;
+                                    }
+                                    _a.label = 3;
+                                case 3:
+                                    if (!filePathToLoadOnLaunch) return [3, 5];
                                     return [4, openFileDownload(filePathToLoadOnLaunch)];
-                                case 1:
+                                case 4:
                                     _a.sent();
                                     return [2];
-                                case 2:
+                                case 5:
                                     detail = "Note that this is only a developer application (" +
                                         "test framework) for the Readium2 NodeJS 'streamer' and Electron-based 'navigator'.";
                                     message = "Use the 'Electron' menu to load publications.";
@@ -516,13 +526,22 @@ function openFile(filePath) {
                 case 0:
                     n = _publicationsFilePaths.indexOf(filePath);
                     if (n < 0) {
-                        publicationPaths = _publicationsServer.addPublications([filePath]);
-                        debug(publicationPaths);
-                        _publicationsFilePaths.push(filePath);
-                        debug(_publicationsFilePaths);
-                        _publicationsUrls.push("" + _publicationsRootUrl + publicationPaths[0]);
-                        debug(_publicationsUrls);
-                        n = _publicationsFilePaths.length - 1;
+                        if (filePath.indexOf("http") === 0) {
+                            _publicationsFilePaths.push(filePath);
+                            debug(_publicationsFilePaths);
+                            _publicationsUrls.push(decodeURIComponent(filePath));
+                            debug(_publicationsUrls);
+                            n = _publicationsFilePaths.length - 1;
+                        }
+                        else {
+                            publicationPaths = _publicationsServer.addPublications([filePath]);
+                            debug(publicationPaths);
+                            _publicationsFilePaths.push(filePath);
+                            debug(_publicationsFilePaths);
+                            _publicationsUrls.push("" + _publicationsRootUrl + publicationPaths[0]);
+                            debug(_publicationsUrls);
+                            n = _publicationsFilePaths.length - 1;
+                        }
                         process.nextTick(function () {
                             resetMenu();
                         });
