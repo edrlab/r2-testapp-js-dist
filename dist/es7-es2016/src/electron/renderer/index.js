@@ -7,6 +7,7 @@ const sessions_1 = require("r2-navigator-js/dist/es7-es2016/src/electron/common/
 const querystring_1 = require("r2-navigator-js/dist/es7-es2016/src/electron/renderer/common/querystring");
 const index_1 = require("r2-navigator-js/dist/es7-es2016/src/electron/renderer/index");
 const init_globals_1 = require("r2-shared-js/dist/es7-es2016/src/init-globals");
+const UrlUtils_1 = require("r2-utils-js/dist/es7-es2016/src/_utils/http/UrlUtils");
 const electron_1 = require("electron");
 const ta_json_1 = require("ta-json");
 const events_1 = require("../common/events");
@@ -18,6 +19,7 @@ const index_5 = require("./riots/menuselect/index_");
 const SystemFonts = require("system-font-families");
 const debounce = require("debounce");
 const IS_DEV = (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev");
+const queryParams = querystring_1.getURLQueryParams();
 electron_1.webFrame.registerURLSchemeAsSecure(sessions_1.READIUM2_ELECTRON_HTTP_PROTOCOL);
 electron_1.webFrame.registerURLSchemeAsPrivileged(sessions_1.READIUM2_ELECTRON_HTTP_PROTOCOL, {
     allowServiceWorkers: false,
@@ -44,6 +46,8 @@ const electronStore = new store_electron_1.StoreElectron("readium2-testapp", {
 });
 const electronStoreLCP = new store_electron_1.StoreElectron("readium2-testapp-lcp", {});
 init_globals_1.initGlobals();
+const pubServerRoot = queryParams["pubServerRoot"];
+console.log(pubServerRoot);
 const computeReadiumCssJsonMessage = () => {
     const on = electronStore.get("styling.readiumcss");
     if (on) {
@@ -69,7 +73,11 @@ const computeReadiumCssJsonMessage = () => {
             paged,
             sepia,
         };
-        const jsonMsg = { injectCSS: "yes", setCSS: cssJson };
+        const jsonMsg = {
+            injectCSS: "yes",
+            setCSS: cssJson,
+            urlRoot: pubServerRoot,
+        };
         return jsonMsg;
     }
     else {
@@ -89,13 +97,14 @@ const saveReadingLocation = (doc, loc) => {
     electronStore.set("readingLocation", obj);
 };
 index_1.setReadingLocationSaver(saveReadingLocation);
-const queryParams = querystring_1.getURLQueryParams();
-const publicationJsonUrl = queryParams["pub"];
+let publicationJsonUrl = queryParams["pub"];
 console.log(publicationJsonUrl);
 const publicationJsonUrl_ = publicationJsonUrl.startsWith(sessions_1.READIUM2_ELECTRON_HTTP_PROTOCOL) ?
     sessions_1.convertCustomSchemeToHttpUrl(publicationJsonUrl) : publicationJsonUrl;
 console.log(publicationJsonUrl_);
-const pathBase64 = publicationJsonUrl_.replace(/.*\/pub\/(.*)\/manifest.json/, "$1");
+const pathBase64 = publicationJsonUrl_.
+    replace(/.*\/pub\/(.*)\/manifest.json/, "$1").
+    replace("*-URL_LCP_PASS_PLACEHOLDER-*", "");
 console.log(pathBase64);
 const pathDecoded = window.atob(pathBase64);
 console.log(pathDecoded);
@@ -252,6 +261,12 @@ electron_1.ipcRenderer.on(events_1.R2_EVENT_TRY_LCP_PASS_RES, (_event, payload) 
                 };
             }
             electronStoreLCP.set("lcp", lcpStore);
+        }
+        if (publicationJsonUrl.indexOf("URL_LCP_PASS_PLACEHOLDER") > 0) {
+            let pazz = Buffer.from(payload.passSha256Hex).toString("base64");
+            pazz = UrlUtils_1.encodeURIComponent_RFC3986(pazz);
+            publicationJsonUrl = publicationJsonUrl.replace("URL_LCP_PASS_PLACEHOLDER", pazz);
+            console.log(publicationJsonUrl);
         }
     }
     startNavigatorExperiment();

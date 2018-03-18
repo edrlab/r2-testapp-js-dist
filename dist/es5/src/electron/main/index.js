@@ -4,8 +4,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = require("tslib");
 var fs = require("fs");
 var path = require("path");
+var publication_1 = require("r2-shared-js/dist/es5/src/models/publication");
 var status_document_processing_1 = require("r2-lcp-js/dist/es5/src/lsd/status-document-processing");
 var lcp_1 = require("r2-lcp-js/dist/es5/src/parser/epub/lcp");
+var lcp_2 = require("r2-lcp-js/dist/es5/src/parser/epub/lcp");
 var publication_download_1 = require("r2-lcp-js/dist/es5/src/publication-download");
 var sessions_1 = require("r2-navigator-js/dist/es5/src/electron/common/sessions");
 var browser_window_tracker_1 = require("r2-navigator-js/dist/es5/src/electron/main/browser-window-tracker");
@@ -15,14 +17,18 @@ var sessions_2 = require("r2-navigator-js/dist/es5/src/electron/main/sessions");
 var init_globals_1 = require("r2-shared-js/dist/es5/src/init-globals");
 var server_1 = require("r2-streamer-js/dist/es5/src/http/server");
 var UrlUtils_1 = require("r2-utils-js/dist/es5/src/_utils/http/UrlUtils");
+var BufferUtils_1 = require("r2-utils-js/dist/es5/src/_utils/stream/BufferUtils");
 var debug_ = require("debug");
 var electron_1 = require("electron");
 var express = require("express");
 var filehound = require("filehound");
 var portfinder = require("portfinder");
+var request = require("request");
+var requestPromise = require("request-promise-native");
+var ta_json_1 = require("ta-json");
 var events_1 = require("../common/events");
 var store_electron_1 = require("../common/store-electron");
-var lcp_2 = require("./lcp");
+var lcp_3 = require("./lcp");
 var lsd_1 = require("./lsd");
 var lsd_deviceid_manager_1 = require("./lsd-deviceid-manager");
 var electronStoreLSD = new store_electron_1.StoreElectron("readium2-testapp-lsd", {});
@@ -63,30 +69,285 @@ electron_1.ipcMain.on(events_1.R2_EVENT_DEVTOOLS, function (_event, _arg) {
 function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
     return tslib_1.__awaiter(this, void 0, void 0, function () {
         var _this = this;
-        var lcpHint, publication_1, err_1, err_2, electronBrowserWindow, urlEncoded, htmlPath, fullUrl;
+        var lcpHint, publication, failure_1, successLCP_1, success_1, needsStreamingResponse_1, promise, err_1, response, err_2, err_3, err_4, electronBrowserWindow, urlEncoded, htmlPath, fullUrl, urlRoot;
         return tslib_1.__generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     debug("createElectronBrowserWindow() " + publicationFilePath + " : " + publicationUrl);
-                    if (!(publicationFilePath.indexOf("http") !== 0)) return [3, 9];
+                    if (!(publicationFilePath.indexOf("http") === 0 &&
+                        publicationFilePath.endsWith(".json"))) return [3, 13];
+                    failure_1 = function (err) { return tslib_1.__awaiter(_this, void 0, void 0, function () {
+                        return tslib_1.__generator(this, function (_a) {
+                            debug(err);
+                            return [2];
+                        });
+                    }); };
+                    successLCP_1 = function (response, pub) { return tslib_1.__awaiter(_this, void 0, void 0, function () {
+                        var responseStr, responseData, err_5, responseJson, lcpl;
+                        return tslib_1.__generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0:
+                                    if (!(response.statusCode && (response.statusCode < 200 || response.statusCode >= 300))) return [3, 2];
+                                    return [4, failure_1("HTTP CODE " + response.statusCode)];
+                                case 1:
+                                    _a.sent();
+                                    return [2];
+                                case 2:
+                                    if (!response.body) return [3, 3];
+                                    debug("RES BODY");
+                                    responseStr = response.body;
+                                    return [3, 8];
+                                case 3:
+                                    debug("RES STREAM");
+                                    responseData = void 0;
+                                    _a.label = 4;
+                                case 4:
+                                    _a.trys.push([4, 6, , 7]);
+                                    return [4, BufferUtils_1.streamToBufferPromise(response)];
+                                case 5:
+                                    responseData = _a.sent();
+                                    return [3, 7];
+                                case 6:
+                                    err_5 = _a.sent();
+                                    debug(err_5);
+                                    return [2];
+                                case 7:
+                                    responseStr = responseData.toString("utf8");
+                                    _a.label = 8;
+                                case 8:
+                                    responseJson = global.JSON.parse(responseStr);
+                                    debug(responseJson);
+                                    lcpl = ta_json_1.JSON.deserialize(responseJson, lcp_2.LCP);
+                                    lcpl.ZipPath = "META-INF/license.lcpl";
+                                    lcpl.JsonSource = responseStr;
+                                    lcpl.init();
+                                    pub.LCP = lcpl;
+                                    publicationUrl = publicationUrl.replace("/pub/", "/pub/" + _publicationsServer.lcpBeginToken +
+                                        "URL_LCP_PASS_PLACEHOLDER" + _publicationsServer.lcpEndToken);
+                                    debug(publicationUrl);
+                                    return [2];
+                            }
+                        });
+                    }); };
+                    success_1 = function (response) { return tslib_1.__awaiter(_this, void 0, void 0, function () {
+                        var _this = this;
+                        var responseStr, responseData, err_6, responseJson, pathBase64, pathDecoded, pubCheck, licenseLink, lcplHref_1, promise, err_7, responsez, err_8;
+                        return tslib_1.__generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0:
+                                    if (!(response.statusCode && (response.statusCode < 200 || response.statusCode >= 300))) return [3, 2];
+                                    return [4, failure_1("HTTP CODE " + response.statusCode)];
+                                case 1:
+                                    _a.sent();
+                                    return [2];
+                                case 2:
+                                    if (!response.body) return [3, 3];
+                                    debug("RES BODY");
+                                    responseStr = response.body;
+                                    return [3, 8];
+                                case 3:
+                                    debug("RES STREAM");
+                                    responseData = void 0;
+                                    _a.label = 4;
+                                case 4:
+                                    _a.trys.push([4, 6, , 7]);
+                                    return [4, BufferUtils_1.streamToBufferPromise(response)];
+                                case 5:
+                                    responseData = _a.sent();
+                                    return [3, 7];
+                                case 6:
+                                    err_6 = _a.sent();
+                                    debug(err_6);
+                                    return [2];
+                                case 7:
+                                    responseStr = responseData.toString("utf8");
+                                    _a.label = 8;
+                                case 8:
+                                    responseJson = global.JSON.parse(responseStr);
+                                    debug(responseJson);
+                                    try {
+                                        publication = ta_json_1.JSON.deserialize(responseJson, publication_1.Publication);
+                                    }
+                                    catch (erorz) {
+                                        debug(erorz);
+                                        return [2];
+                                    }
+                                    debug(publication);
+                                    pathBase64 = decodeURIComponent(publicationFilePath.replace(/.*\/pub\/(.*)\/manifest.json/, "$1"));
+                                    debug(pathBase64);
+                                    pathDecoded = new Buffer(pathBase64, "base64").toString("utf8");
+                                    debug(pathDecoded);
+                                    debug("ADDED HTTP pub to server cache: " + pathDecoded + " --- " + publicationFilePath);
+                                    _publicationsServer.cachePublication(pathDecoded, publication);
+                                    pubCheck = _publicationsServer.cachedPublication(pathDecoded);
+                                    if (!pubCheck) {
+                                        debug("PUB CHECK FAIL?");
+                                    }
+                                    if (!publication.Links) return [3, 20];
+                                    licenseLink = publication.Links.find(function (link) {
+                                        return link.Rel.indexOf("license") >= 0 &&
+                                            link.TypeLink === "application/vnd.readium.lcp.license.v1.0+json";
+                                    });
+                                    if (!(licenseLink && licenseLink.Href)) return [3, 20];
+                                    lcplHref_1 = publicationFilePath.replace("manifest.json", licenseLink.Href);
+                                    debug(lcplHref_1);
+                                    if (!needsStreamingResponse_1) return [3, 13];
+                                    promise = new Promise(function (resolve, reject) {
+                                        request.get({
+                                            headers: {},
+                                            method: "GET",
+                                            uri: lcplHref_1,
+                                        })
+                                            .on("response", function (responsez) { return tslib_1.__awaiter(_this, void 0, void 0, function () {
+                                            return tslib_1.__generator(this, function (_a) {
+                                                switch (_a.label) {
+                                                    case 0: return [4, successLCP_1(responsez, publication)];
+                                                    case 1:
+                                                        _a.sent();
+                                                        resolve();
+                                                        return [2];
+                                                }
+                                            });
+                                        }); })
+                                            .on("error", function (err) { return tslib_1.__awaiter(_this, void 0, void 0, function () {
+                                            return tslib_1.__generator(this, function (_a) {
+                                                switch (_a.label) {
+                                                    case 0: return [4, failure_1(err)];
+                                                    case 1:
+                                                        _a.sent();
+                                                        reject();
+                                                        return [2];
+                                                }
+                                            });
+                                        }); });
+                                    });
+                                    _a.label = 9;
+                                case 9:
+                                    _a.trys.push([9, 11, , 12]);
+                                    return [4, promise];
+                                case 10:
+                                    _a.sent();
+                                    return [3, 12];
+                                case 11:
+                                    err_7 = _a.sent();
+                                    return [2];
+                                case 12: return [3, 20];
+                                case 13:
+                                    responsez = void 0;
+                                    _a.label = 14;
+                                case 14:
+                                    _a.trys.push([14, 16, , 18]);
+                                    return [4, requestPromise({
+                                            headers: {},
+                                            method: "GET",
+                                            resolveWithFullResponse: true,
+                                            uri: lcplHref_1,
+                                        })];
+                                case 15:
+                                    responsez = _a.sent();
+                                    return [3, 18];
+                                case 16:
+                                    err_8 = _a.sent();
+                                    return [4, failure_1(err_8)];
+                                case 17:
+                                    _a.sent();
+                                    return [2];
+                                case 18: return [4, successLCP_1(responsez, publication)];
+                                case 19:
+                                    _a.sent();
+                                    _a.label = 20;
+                                case 20: return [2];
+                            }
+                        });
+                    }); };
+                    needsStreamingResponse_1 = true;
+                    if (!needsStreamingResponse_1) return [3, 5];
+                    promise = new Promise(function (resolve, reject) {
+                        request.get({
+                            headers: {},
+                            method: "GET",
+                            uri: publicationFilePath,
+                        })
+                            .on("response", function (response) { return tslib_1.__awaiter(_this, void 0, void 0, function () {
+                            return tslib_1.__generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0: return [4, success_1(response)];
+                                    case 1:
+                                        _a.sent();
+                                        resolve();
+                                        return [2];
+                                }
+                            });
+                        }); })
+                            .on("error", function (err) { return tslib_1.__awaiter(_this, void 0, void 0, function () {
+                            return tslib_1.__generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0: return [4, failure_1(err)];
+                                    case 1:
+                                        _a.sent();
+                                        reject();
+                                        return [2];
+                                }
+                            });
+                        }); });
+                    });
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    return [4, _publicationsServer.loadOrGetCachedPublication(publicationFilePath)];
+                    return [4, promise];
                 case 2:
-                    publication_1 = _a.sent();
+                    _a.sent();
                     return [3, 4];
                 case 3:
                     err_1 = _a.sent();
-                    debug(err_1);
                     return [2];
-                case 4:
-                    if (!(publication_1 && publication_1.LCP)) return [3, 9];
-                    _a.label = 5;
+                case 4: return [3, 12];
                 case 5:
-                    _a.trys.push([5, 7, , 8]);
-                    return [4, status_document_processing_1.launchStatusDocumentProcessing(publication_1.LCP, deviceIDManager, function (licenseUpdateJson) { return tslib_1.__awaiter(_this, void 0, void 0, function () {
-                            var res, err_3;
+                    response = void 0;
+                    _a.label = 6;
+                case 6:
+                    _a.trys.push([6, 8, , 10]);
+                    return [4, requestPromise({
+                            headers: {},
+                            method: "GET",
+                            resolveWithFullResponse: true,
+                            uri: publicationFilePath,
+                        })];
+                case 7:
+                    response = _a.sent();
+                    return [3, 10];
+                case 8:
+                    err_2 = _a.sent();
+                    return [4, failure_1(err_2)];
+                case 9:
+                    _a.sent();
+                    return [2];
+                case 10: return [4, success_1(response)];
+                case 11:
+                    _a.sent();
+                    _a.label = 12;
+                case 12: return [3, 17];
+                case 13:
+                    if (!(publicationFilePath.indexOf("http") !== 0)) return [3, 17];
+                    _a.label = 14;
+                case 14:
+                    _a.trys.push([14, 16, , 17]);
+                    return [4, _publicationsServer.loadOrGetCachedPublication(publicationFilePath)];
+                case 15:
+                    publication = _a.sent();
+                    return [3, 17];
+                case 16:
+                    err_3 = _a.sent();
+                    debug(err_3);
+                    return [2];
+                case 17:
+                    if (!(publication && publication.LCP)) return [3, 22];
+                    debug(publication.LCP);
+                    _a.label = 18;
+                case 18:
+                    _a.trys.push([18, 20, , 21]);
+                    return [4, status_document_processing_1.launchStatusDocumentProcessing(publication.LCP, deviceIDManager, function (licenseUpdateJson) { return tslib_1.__awaiter(_this, void 0, void 0, function () {
+                            var res, err_9;
                             return tslib_1.__generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
@@ -96,37 +357,37 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                                         _a.label = 1;
                                     case 1:
                                         _a.trys.push([1, 3, , 4]);
-                                        return [4, lsd_injectlcpl_1.lsdLcpUpdateInject(licenseUpdateJson, publication_1, publicationFilePath)];
+                                        return [4, lsd_injectlcpl_1.lsdLcpUpdateInject(licenseUpdateJson, publication, publicationFilePath)];
                                     case 2:
                                         res = _a.sent();
                                         debug("EPUB SAVED: " + res);
                                         return [3, 4];
                                     case 3:
-                                        err_3 = _a.sent();
-                                        debug(err_3);
+                                        err_9 = _a.sent();
+                                        debug(err_9);
                                         return [3, 4];
                                     case 4: return [2];
                                 }
                             });
                         }); })];
-                case 6:
+                case 19:
                     _a.sent();
-                    return [3, 8];
-                case 7:
-                    err_2 = _a.sent();
-                    debug(err_2);
-                    return [3, 8];
-                case 8:
-                    if (publication_1.LCP.Encryption &&
-                        publication_1.LCP.Encryption.UserKey &&
-                        publication_1.LCP.Encryption.UserKey.TextHint) {
-                        lcpHint = publication_1.LCP.Encryption.UserKey.TextHint;
+                    return [3, 21];
+                case 20:
+                    err_4 = _a.sent();
+                    debug(err_4);
+                    return [3, 21];
+                case 21:
+                    if (publication.LCP.Encryption &&
+                        publication.LCP.Encryption.UserKey &&
+                        publication.LCP.Encryption.UserKey.TextHint) {
+                        lcpHint = publication.LCP.Encryption.UserKey.TextHint;
                     }
                     if (!lcpHint) {
                         lcpHint = "LCP passphrase";
                     }
-                    _a.label = 9;
-                case 9:
+                    _a.label = 22;
+                case 22:
                     electronBrowserWindow = new electron_1.BrowserWindow({
                         height: 600,
                         webPreferences: {
@@ -155,6 +416,8 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                     if (lcpHint) {
                         fullUrl = fullUrl + "&lcpHint=" + UrlUtils_1.encodeURIComponent_RFC3986(lcpHint);
                     }
+                    urlRoot = _publicationsServer.serverUrl() + "/";
+                    fullUrl = fullUrl + "&pubServerRoot=" + UrlUtils_1.encodeURIComponent_RFC3986(urlRoot);
                     debug(fullUrl);
                     electronBrowserWindow.webContents.loadURL(fullUrl, { extraHeaders: "pragma: no-cache\n" });
                     return [2];
@@ -167,7 +430,7 @@ electron_1.app.on("ready", function () {
     debug("app ready");
     (function () { return tslib_1.__awaiter(_this, void 0, void 0, function () {
         var _this = this;
-        var err_4, readiumCSSPath, preloadPath, distTarget, dirnameSlashed, staticOptions, pubPaths, err_5;
+        var err_10, readiumCSSPath, preloadPath, distTarget, dirnameSlashed, staticOptions, pubPaths, err_11;
         return tslib_1.__generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -183,8 +446,8 @@ electron_1.app.on("ready", function () {
                     _publicationsFilePaths = _a.sent();
                     return [3, 3];
                 case 2:
-                    err_4 = _a.sent();
-                    debug(err_4);
+                    err_10 = _a.sent();
+                    debug(err_10);
                     return [3, 3];
                 case 3:
                     debug(_publicationsFilePaths);
@@ -195,7 +458,7 @@ electron_1.app.on("ready", function () {
                         disableRemotePubUrl: true,
                     });
                     sessions_2.secureSessions(_publicationsServer);
-                    lcp_2.installLcpHandler(_publicationsServer);
+                    lcp_3.installLcpHandler(_publicationsServer);
                     lsd_1.installLsdHandler(_publicationsServer, deviceIDManager);
                     readiumCSSPath = IS_DEV ?
                         path.join(process.cwd(), "dist", "ReadiumCSS").replace(/\\/g, "/") :
@@ -243,8 +506,8 @@ electron_1.app.on("ready", function () {
                     _publicationsServerPort = _a.sent();
                     return [3, 7];
                 case 6:
-                    err_5 = _a.sent();
-                    debug(err_5);
+                    err_11 = _a.sent();
+                    debug(err_11);
                     return [3, 7];
                 case 7: return [4, _publicationsServer.start(_publicationsServerPort, true)];
                 case 8:
@@ -436,7 +699,7 @@ function resetMenu() {
 function openFileDownload(filePath) {
     return tslib_1.__awaiter(this, void 0, void 0, function () {
         var _this = this;
-        var dir, ext, filename, destFileName, epubFilePath, err_6, result_1;
+        var dir, ext, filename, destFileName, epubFilePath, err_12, result_1;
         return tslib_1.__generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -456,11 +719,11 @@ function openFileDownload(filePath) {
                     epubFilePath = _a.sent();
                     return [3, 4];
                 case 3:
-                    err_6 = _a.sent();
+                    err_12 = _a.sent();
                     process.nextTick(function () {
-                        var detail = (typeof err_6 === "string") ?
-                            err_6 :
-                            (err_6.toString ? err_6.toString() : "ERROR!?");
+                        var detail = (typeof err_12 === "string") ?
+                            err_12 :
+                            (err_12.toString ? err_12.toString() : "ERROR!?");
                         var message = "LCP EPUB download fail!]";
                         var res = electron_1.dialog.showMessageBox({
                             buttons: ["&OK"],

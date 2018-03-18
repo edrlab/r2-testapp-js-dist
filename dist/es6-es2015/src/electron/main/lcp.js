@@ -17,6 +17,9 @@ function installLcpHandler(publicationsServer) {
                 checkSum.update(payload.lcpPass);
                 passSha256Hex = checkSum.digest("hex");
             }
+            else {
+                passSha256Hex = payload.lcpPass;
+            }
             const payloadRes = {
                 error: undefined,
                 okay: true,
