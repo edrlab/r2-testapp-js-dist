@@ -305,7 +305,7 @@ async function createElectronBrowserWindow(publicationFilePath, publicationUrl) 
     if (lcpHint) {
         fullUrl = fullUrl + "&lcpHint=" + UrlUtils_1.encodeURIComponent_RFC3986(lcpHint);
     }
-    const urlRoot = _publicationsServer.serverUrl() + "/";
+    const urlRoot = _publicationsServer.serverUrl();
     fullUrl = fullUrl + "&pubServerRoot=" + UrlUtils_1.encodeURIComponent_RFC3986(urlRoot);
     debug(fullUrl);
     electronBrowserWindow.webContents.loadURL(fullUrl, { extraHeaders: "pragma: no-cache\n" });
