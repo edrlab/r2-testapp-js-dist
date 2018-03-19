@@ -241,7 +241,8 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                 yield success(response);
             }
         }
-        else if (publicationFilePath.indexOf("http") !== 0) {
+        else if (publicationFilePath.indexOf("http") !== 0 ||
+            publicationFilePath.endsWith(".epub")) {
             try {
                 publication = yield _publicationsServer.loadOrGetCachedPublication(publicationFilePath);
             }
@@ -604,7 +605,8 @@ function openFile(filePath) {
     return tslib_1.__awaiter(this, void 0, void 0, function* () {
         let n = _publicationsFilePaths.indexOf(filePath);
         if (n < 0) {
-            if (filePath.indexOf("http") === 0) {
+            if (filePath.indexOf("http") === 0 &&
+                filePath.endsWith(".json")) {
                 _publicationsFilePaths.push(filePath);
                 debug(_publicationsFilePaths);
                 _publicationsUrls.push(decodeURIComponent(filePath));

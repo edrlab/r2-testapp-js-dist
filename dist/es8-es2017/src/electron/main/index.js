@@ -239,7 +239,8 @@ async function createElectronBrowserWindow(publicationFilePath, publicationUrl) 
             await success(response);
         }
     }
-    else if (publicationFilePath.indexOf("http") !== 0) {
+    else if (publicationFilePath.indexOf("http") !== 0 ||
+        publicationFilePath.endsWith(".epub")) {
         try {
             publication = await _publicationsServer.loadOrGetCachedPublication(publicationFilePath);
         }
@@ -598,7 +599,8 @@ async function openFileDownload(filePath) {
 async function openFile(filePath) {
     let n = _publicationsFilePaths.indexOf(filePath);
     if (n < 0) {
-        if (filePath.indexOf("http") === 0) {
+        if (filePath.indexOf("http") === 0 &&
+            filePath.endsWith(".json")) {
             _publicationsFilePaths.push(filePath);
             debug(_publicationsFilePaths);
             _publicationsUrls.push(decodeURIComponent(filePath));

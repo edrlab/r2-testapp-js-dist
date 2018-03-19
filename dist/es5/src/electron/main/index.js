@@ -328,7 +328,8 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                     _a.label = 12;
                 case 12: return [3, 17];
                 case 13:
-                    if (!(publicationFilePath.indexOf("http") !== 0)) return [3, 17];
+                    if (!(publicationFilePath.indexOf("http") !== 0 ||
+                        publicationFilePath.endsWith(".epub"))) return [3, 17];
                     _a.label = 14;
                 case 14:
                     _a.trys.push([14, 16, , 17]);
@@ -789,7 +790,8 @@ function openFile(filePath) {
                 case 0:
                     n = _publicationsFilePaths.indexOf(filePath);
                     if (n < 0) {
-                        if (filePath.indexOf("http") === 0) {
+                        if (filePath.indexOf("http") === 0 &&
+                            filePath.endsWith(".json")) {
                             _publicationsFilePaths.push(filePath);
                             debug(_publicationsFilePaths);
                             _publicationsUrls.push(decodeURIComponent(filePath));
