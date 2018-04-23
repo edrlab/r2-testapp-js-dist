@@ -446,11 +446,6 @@ const initFontSelector = () => {
         }
         if (_sysFonts && _sysFonts.length) {
             const arr = tag.opts.options;
-            const divider = {
-                id: ID_PREFIX + "_",
-                label: "_",
-            };
-            arr.push(divider);
             _sysFonts.forEach((sysFont) => {
                 const option = {
                     id: ID_PREFIX + sysFont,
@@ -546,20 +541,15 @@ window.addEventListener("DOMContentLoaded", () => {
     snackBar = new window.mdc.snackbar.MDCSnackbar(snackBarElem);
     snackBarElem.mdcSnackbar = snackBar;
     snackBar.dismissesOnAction = true;
-    const menuFactory = (menuEl) => {
-        const menu = new window.mdc.menu.MDCMenu(menuEl);
-        menuEl.mdcSimpleMenu = menu;
-        return menu;
-    };
     const selectElement = document.getElementById("nav-select");
-    const navSelector = new window.mdc.select.MDCSelect(selectElement, undefined, menuFactory);
+    const navSelector = new window.mdc.select.MDCSelect(selectElement);
     selectElement.mdcSelect = navSelector;
-    navSelector.listen("MDCSelect:change", (ev) => {
+    navSelector.listen("change", (ev) => {
         const activePanel = document.querySelector(".tabPanel.active");
         if (activePanel) {
             activePanel.classList.remove("active");
         }
-        const newActivePanel = document.querySelector(".tabPanel:nth-child(" + (ev.detail.selectedIndex + 1) + ")");
+        const newActivePanel = document.querySelector(".tabPanel:nth-child(" + (ev.target.selectedIndex + 1) + ")");
         if (newActivePanel) {
             newActivePanel.classList.add("active");
             const div = document.getElementById("reader_controls_STYLES");

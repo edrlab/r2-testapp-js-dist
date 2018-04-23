@@ -437,7 +437,7 @@ var initFontSelector = function () {
         tag.setDisabled(!newValue);
     });
     setTimeout(function () { return tslib_1.__awaiter(_this, void 0, void 0, function () {
-        var _sysFonts, systemFonts, err_1, arr_1, divider, newSelectedID_1, newFoundItem;
+        var _sysFonts, systemFonts, err_1, arr_1, newSelectedID_1, newFoundItem;
         return tslib_1.__generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -457,11 +457,6 @@ var initFontSelector = function () {
                 case 4:
                     if (_sysFonts && _sysFonts.length) {
                         arr_1 = tag.opts.options;
-                        divider = {
-                            id: ID_PREFIX + "_",
-                            label: "_",
-                        };
-                        arr_1.push(divider);
                         _sysFonts.forEach(function (sysFont) {
                             var option = {
                                 id: ID_PREFIX + sysFont,
@@ -560,20 +555,15 @@ window.addEventListener("DOMContentLoaded", function () {
     snackBar = new window.mdc.snackbar.MDCSnackbar(snackBarElem);
     snackBarElem.mdcSnackbar = snackBar;
     snackBar.dismissesOnAction = true;
-    var menuFactory = function (menuEl) {
-        var menu = new window.mdc.menu.MDCMenu(menuEl);
-        menuEl.mdcSimpleMenu = menu;
-        return menu;
-    };
     var selectElement = document.getElementById("nav-select");
-    var navSelector = new window.mdc.select.MDCSelect(selectElement, undefined, menuFactory);
+    var navSelector = new window.mdc.select.MDCSelect(selectElement);
     selectElement.mdcSelect = navSelector;
-    navSelector.listen("MDCSelect:change", function (ev) {
+    navSelector.listen("change", function (ev) {
         var activePanel = document.querySelector(".tabPanel.active");
         if (activePanel) {
             activePanel.classList.remove("active");
         }
-        var newActivePanel = document.querySelector(".tabPanel:nth-child(" + (ev.detail.selectedIndex + 1) + ")");
+        var newActivePanel = document.querySelector(".tabPanel:nth-child(" + (ev.target.selectedIndex + 1) + ")");
         if (newActivePanel) {
             newActivePanel.classList.add("active");
             var div = document.getElementById("reader_controls_STYLES");

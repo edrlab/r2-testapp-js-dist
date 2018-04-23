@@ -53,16 +53,13 @@ window.riot_menuselect = function (_opts) {
         that.root.mdcSelect.disabled = disabled;
     };
     that.on("mount", function () {
-        var menuFactory = function (menuEl) {
-            var menu = new window.mdc.menu.MDCMenu(menuEl);
-            menuEl.mdcSimpleMenu = menu;
-            return menu;
-        };
-        var mdcSelector = new window.mdc.select.MDCSelect(that.root, undefined, menuFactory);
+        console.log("that.root:");
+        console.log(that.root);
+        var mdcSelector = new window.mdc.select.MDCSelect(that.root);
         that.root.mdcSelect = mdcSelector;
         mdcSelector.disabled = that.opts.disabled;
-        mdcSelector.listen("MDCSelect:change", function (ev) {
-            that.trigger("selectionChanged", ev.detail.value);
+        mdcSelector.listen("change", function (ev) {
+            that.trigger("selectionChanged", ev.target.value);
         });
     });
 };
