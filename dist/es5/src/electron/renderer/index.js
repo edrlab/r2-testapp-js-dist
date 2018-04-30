@@ -86,6 +86,10 @@ var computeReadiumCssJsonMessage = function () {
     }
 };
 index_1.setReadiumCssJsonGetter(computeReadiumCssJsonMessage);
+var getEpubReadingSystem = function () {
+    return { name: "Readium2 test app", version: "0.0.1-alpha.1" };
+};
+index_1.setEpubReadingSystemJsonGetter(getEpubReadingSystem);
 var saveReadingLocation = function (doc, loc) {
     var obj = electronStore.get("readingLocation");
     if (!obj) {

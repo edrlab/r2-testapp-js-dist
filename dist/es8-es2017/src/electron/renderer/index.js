@@ -84,6 +84,10 @@ const computeReadiumCssJsonMessage = () => {
     }
 };
 index_1.setReadiumCssJsonGetter(computeReadiumCssJsonMessage);
+const getEpubReadingSystem = () => {
+    return { name: "Readium2 test app", version: "0.0.1-alpha.1" };
+};
+index_1.setEpubReadingSystemJsonGetter(getEpubReadingSystem);
 const saveReadingLocation = (doc, loc) => {
     let obj = electronStore.get("readingLocation");
     if (!obj) {
