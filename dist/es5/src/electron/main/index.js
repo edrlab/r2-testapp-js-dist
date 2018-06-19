@@ -68,8 +68,8 @@ electron_1.ipcMain.on(events_1.R2_EVENT_DEVTOOLS, function (_event, _arg) {
 });
 function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
     return tslib_1.__awaiter(this, void 0, void 0, function () {
-        var _this = this;
         var lcpHint, publication, failure_1, successLCP_1, success_1, needsStreamingResponse_1, promise, err_1, response, err_2, err_3, err_4, electronBrowserWindow, urlEncoded, htmlPath, fullUrl, urlRoot;
+        var _this = this;
         return tslib_1.__generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -130,8 +130,8 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                         });
                     }); };
                     success_1 = function (response) { return tslib_1.__awaiter(_this, void 0, void 0, function () {
-                        var _this = this;
                         var responseStr, responseData, err_6, responseJson, pathBase64, pathDecoded, pubCheck, licenseLink, lcplHref_1, promise, err_7, responsez, err_8;
+                        var _this = this;
                         return tslib_1.__generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0:
@@ -430,8 +430,8 @@ sessions_2.initSessions();
 electron_1.app.on("ready", function () {
     debug("app ready");
     (function () { return tslib_1.__awaiter(_this, void 0, void 0, function () {
-        var _this = this;
         var err_10, readiumCSSPath, preloadPath, distTarget, dirnameSlashed, staticOptions, pubPaths, err_11;
+        var _this = this;
         return tslib_1.__generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -699,8 +699,8 @@ function resetMenu() {
 }
 function openFileDownload(filePath) {
     return tslib_1.__awaiter(this, void 0, void 0, function () {
-        var _this = this;
         var dir, ext, filename, destFileName, epubFilePath, err_12, result_1;
+        var _this = this;
         return tslib_1.__generator(this, function (_a) {
             switch (_a.label) {
                 case 0:

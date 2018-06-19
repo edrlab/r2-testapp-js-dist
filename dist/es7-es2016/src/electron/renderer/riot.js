@@ -1,4 +1,4 @@
-/* Riot v3.9.4, @license MIT */
+/* Riot v3.10.2, @license MIT */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
   typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -53,7 +53,7 @@
     SVG_NS = 'http://www.w3.org/2000/svg',
     XLINK_REGEX = /^xlink:(\w+)/,
 
-    WIN = typeof window === T_UNDEF ? undefined : window,
+    WIN = typeof window === T_UNDEF ? /* istanbul ignore next */ undefined : window,
 
     // special native tags that cannot be treated like the others
     RE_SPECIAL_TAGS = /^(?:t(?:body|head|foot|[rhd])|caption|col(?:group)?|opt(?:ion|group))$/,
@@ -73,7 +73,7 @@
      */
     RE_BOOL_ATTRS = /^(?:disabled|checked|readonly|required|allowfullscreen|auto(?:focus|play)|compact|controls|default|formnovalidate|hidden|ismap|itemscope|loop|multiple|muted|no(?:resize|shade|validate|wrap)?|open|reversed|seamless|selected|sortable|truespeed|typemustmatch)$/,
     // version# for IE 8-11, 0 for others
-    IE_VERSION = (WIN && WIN.document || {}).documentMode | 0;
+    IE_VERSION = (WIN && WIN.document || /* istanbul ignore next */ {}).documentMode | 0;
 
   /**
    * Create a generic DOM node
@@ -168,6 +168,7 @@
    * @version v3.0.8
    */
 
+  /* istanbul ignore next */
   var skipRegex = (function () { //eslint-disable-line no-unused-vars
 
     var beforeReChars = '[{(,;:?=|&!^~>%*/';
@@ -1399,6 +1400,17 @@
     return el
   }
 
+  var EVENT_ATTR_RE = /^on/;
+
+  /**
+   * True if the event attribute starts with 'on'
+   * @param   { String } attribute - event attribute
+   * @returns { Boolean }
+   */
+  function isEventAttribute(attribute) {
+    return EVENT_ATTR_RE.test(attribute)
+  }
+
   /**
    * Loop backward all the parents tree to detect the first custom parent tag
    * @param   { Object } tag - a Tag instance
@@ -1744,15 +1756,19 @@
       return
     }
 
-
-    // event handler
-    if (isFunction(value)) {
-      setEventHandler(attrName, value, dom, this);
+    switch (true) {
+    // handle events binding
+    case isFunction(value):
+      if (isEventAttribute(attrName)) {
+        setEventHandler(attrName, value, dom, this);
+      }
+      break
     // show / hide
-    } else if (isToggle) {
+    case isToggle:
       toggleVisibility(dom, attrName === HIDE_DIRECTIVE ? !value : value);
+      break
     // handle attributes
-    } else {
+    default:
       if (expr.bool) {
         dom[attrName] = value;
       }
@@ -2062,7 +2078,7 @@
     return delete __TAG_IMPL[name]
   }
 
-  var version = 'v3.9.4';
+  var version = 'v3.10.2';
 
   var core = /*#__PURE__*/Object.freeze({
     Tag: Tag,
@@ -2317,7 +2333,6 @@
     var isAnonymous = !__TAG_IMPL[tagName];
     var isVirtual = dom.tagName === 'VIRTUAL';
     var oldItems = [];
-    var hasKeys;
 
     // remove the each property from the original tag
     removeAttribute(dom, LOOP_DIRECTIVE);
@@ -2342,6 +2357,7 @@
       var isObject = !isArray(items) && !isString(items);
       var root = placeholder.parentNode;
       var tmpItems = [];
+      var hasKeys = isObject && !!items;
 
       // if this DOM was removed the update here is useless
       // this condition fixes also a weird async issue on IE in our unit test
@@ -2349,11 +2365,7 @@
 
       // object loop. any changes cause full redraw
       if (isObject) {
-        hasKeys = items || false;
-        items = hasKeys ?
-          Object.keys(items).map(function (key) { return mkitem(expr, items[key], key); }) : [];
-      } else {
-        hasKeys = false;
+        items = items ? Object.keys(items).map(function (key) { return mkitem(expr, items[key], key); }) : [];
       }
 
       // store the amount of filtered items
@@ -2372,15 +2384,16 @@
         }
 
         var itemId = getItemId(keyAttr, _item, item, hasKeyAttrExpr);
-        // reorder only if the items are objects
-        var doReorder = mustReorder && typeof _item === T_OBJECT && !hasKeys;
+        // reorder only if the items are not objects
+        // or a key attribute has been provided
+        var doReorder = !isObject && mustReorder && typeof _item === T_OBJECT || keyAttr;
         var oldPos = oldItems.indexOf(itemId);
         var isNew = oldPos === -1;
         var pos = !isNew && doReorder ? oldPos : i;
         // does a tag exist in this position?
         var tag = tags[pos];
         var mustAppend = i >= oldItems.length;
-        var mustCreate =  doReorder && isNew || !doReorder && !tag;
+        var mustCreate = doReorder && isNew || !doReorder && !tag || !tags[i];
 
         // new tag
         if (mustCreate) {
@@ -2543,12 +2556,7 @@
         this.stub.parentNode.insertBefore(this.current, this.stub);
         this.expressions = parseExpressions.apply(this.tag, [this.current, true]);
       } else if (!this.value && this.current) { // remove
-        unmountAll(this.expressions);
-        if (this.current._tag) {
-          this.current._tag.unmount();
-        } else if (this.current.parentNode) {
-          this.current.parentNode.removeChild(this.current);
-        }
+        this.unmount();
         this.current = null;
         this.expressions = [];
       }
@@ -2556,6 +2564,14 @@
       if (this.value) { update.call(this.tag, this.expressions); }
     },
     unmount: function unmount() {
+      if (this.current) {
+        if (this.current._tag) {
+          this.current._tag.unmount();
+        } else if (this.current.parentNode) {
+          this.current.parentNode.removeChild(this.current);
+        }
+      }
+
       unmountAll(this.expressions || []);
     }
   }
@@ -2881,7 +2897,7 @@
     if ( conf === void 0 ) conf = {};
 
     var tag = conf.context || {};
-    var opts = extend({}, conf.opts);
+    var opts = conf.opts || {};
     var parent = conf.parent;
     var isLoop = conf.isLoop;
     var isAnonymous = !!conf.isAnonymous;
@@ -2893,20 +2909,26 @@
     var instAttrs = [];
     // expressions on this type of Tag
     var implAttrs = [];
+    var tmpl = impl.tmpl;
     var expressions = [];
     var root = conf.root;
     var tagName = conf.tagName || getName(root);
     var isVirtual = tagName === 'virtual';
-    var isInline = !isVirtual && !impl.tmpl;
+    var isInline = !isVirtual && !tmpl;
     var dom;
+
+    if (isInline || isLoop && isAnonymous) {
+      dom = root;
+    } else {
+      if (!isVirtual) { root.innerHTML = ''; }
+      dom = mkdom(tmpl, innerHTML, isSvg(root));
+    }
 
     // make this tag observable
     if (!skipAnonymous) { observable(tag); }
+
     // only call unmount if we have a valid __TAG_IMPL (has name property)
     if (impl.name && root._tag) { root._tag.unmount(true); }
-
-    // not yet mounted
-    define(tag, 'isMounted', false);
 
     define(tag, '__', {
       impl: impl,
@@ -2932,34 +2954,35 @@
       head: null
     });
 
-    // create a unique id to this tag
-    // it could be handy to use it also to improve the virtual dom rendering speed
-    define(tag, '_riot_id', uid()); // base 1 allows test !t._riot_id
-    define(tag, 'root', root);
-    extend(tag, { opts: opts }, item);
-    // protect the "tags" and "refs" property from being overridden
-    define(tag, 'parent', parent || null);
-    define(tag, 'tags', {});
-    define(tag, 'refs', {});
+    // tag protected properties
+    return [
+      ['isMounted', false],
+      // create a unique id to this tag
+      // it could be handy to use it also to improve the virtual dom rendering speed
+      ['_riot_id', uid()],
+      ['root', root],
+      ['opts', opts, { writable: true, enumerable: true }],
+      ['parent', parent || null],
+      // protect the "tags" and "refs" property from being overridden
+      ['tags', {}],
+      ['refs', {}],
+      ['update', function (data) { return componentUpdate(tag, data, expressions); }],
+      ['mixin', function () {
+        var mixins = [], len = arguments.length;
+        while ( len-- ) mixins[ len ] = arguments[ len ];
 
-    if (isInline || isLoop && isAnonymous) {
-      dom = root;
-    } else {
-      if (!isVirtual) { root.innerHTML = ''; }
-      dom = mkdom(impl.tmpl, innerHTML, isSvg(root));
-    }
+        return componentMixin.apply(void 0, [ tag ].concat( mixins ));
+    }],
+      ['mount', function () { return componentMount(tag, dom, expressions, opts); }],
+      ['unmount', function (mustKeepRoot) { return tagUnmount(tag, mustKeepRoot, expressions); }]
+    ].reduce(function (acc, ref) {
+      var key = ref[0];
+      var value = ref[1];
+      var opts = ref[2];
 
-    define(tag, 'update', function (data) { return componentUpdate(tag, data, expressions); });
-    define(tag, 'mixin', function () {
-      var mixins = [], len = arguments.length;
-      while ( len-- ) mixins[ len ] = arguments[ len ];
-
-      return componentMixin.apply(void 0, [ tag ].concat( mixins ));
-    });
-    define(tag, 'mount', function () { return componentMount(tag, dom, expressions, opts); });
-    define(tag, 'unmount', function (mustKeepRoot) { return tagUnmount(tag, mustKeepRoot, expressions); });
-
-    return tag
+      define(tag, key, value, opts);
+      return acc
+    }, extend(tag, item))
   }
 
   /**
