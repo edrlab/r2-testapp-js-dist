@@ -90,14 +90,16 @@ var getEpubReadingSystem = function () {
     return { name: "Readium2 test app", version: "0.0.1-alpha.1" };
 };
 index_1.setEpubReadingSystemJsonGetter(getEpubReadingSystem);
-var saveReadingLocation = function (doc, loc) {
+var saveReadingLocation = function (doc, location) {
     var obj = electronStore.get("readingLocation");
     if (!obj) {
         obj = {};
     }
     obj[pathDecoded] = {
         doc: doc,
-        loc: loc,
+        loc: undefined,
+        locCfi: location.cfi,
+        locCssSelector: location.cssSelector,
     };
     electronStore.set("readingLocation", obj);
 };
@@ -723,7 +725,7 @@ function startNavigatorExperiment() {
     var drawerButton = document.getElementById("drawerButton");
     drawerButton.focus();
     (function () { return tslib_1.__awaiter(_this, void 0, void 0, function () {
-        var response, e_1, _publicationJSON, e_2, _publication, title, keys, h1, buttonNavLeft, buttonNavRight, opts, opts, tag_1, opts, tag_2, landmarksData, opts, tag_3, readStore, pubDocHrefToLoad, pubDocSelectorToGoto, obj;
+        var response, e_1, _publicationJSON, e_2, _publication, title, keys, h1, buttonNavLeft, buttonNavRight, opts, opts, tag_1, opts, tag_2, landmarksData, opts, tag_3, readStore, location, pubDocHrefToLoad, obj;
         return tslib_1.__generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -872,7 +874,18 @@ function startNavigatorExperiment() {
                         if (obj && obj.doc) {
                             pubDocHrefToLoad = obj.doc;
                             if (obj.loc) {
-                                pubDocSelectorToGoto = obj.loc;
+                                location = { cfi: undefined, cssSelector: obj.loc };
+                            }
+                            else if (obj.locCssSelector) {
+                                location = { cfi: undefined, cssSelector: obj.locCssSelector };
+                            }
+                            if (obj.locCfi) {
+                                if (!location) {
+                                    location = { cfi: obj.locCfi, cssSelector: "body" };
+                                }
+                                else {
+                                    location.cfi = obj.locCfi;
+                                }
                             }
                         }
                     }
@@ -914,7 +927,7 @@ function startNavigatorExperiment() {
                         rootHtmlElement.addEventListener(index_1.DOM_EVENT_SHOW_VIEWPORT, function () {
                             unhideWebView();
                         });
-                        index_1.installNavigatorDOM(_publication, publicationJsonUrl, rootHtmlElementID, preloadPath, pubDocHrefToLoad, pubDocSelectorToGoto);
+                        index_1.installNavigatorDOM(_publication, publicationJsonUrl, rootHtmlElementID, preloadPath, pubDocHrefToLoad, location);
                     }, 500);
                     return [2];
             }

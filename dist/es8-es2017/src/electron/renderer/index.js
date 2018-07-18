@@ -88,14 +88,16 @@ const getEpubReadingSystem = () => {
     return { name: "Readium2 test app", version: "0.0.1-alpha.1" };
 };
 index_1.setEpubReadingSystemJsonGetter(getEpubReadingSystem);
-const saveReadingLocation = (doc, loc) => {
+const saveReadingLocation = (doc, location) => {
     let obj = electronStore.get("readingLocation");
     if (!obj) {
         obj = {};
     }
     obj[pathDecoded] = {
         doc,
-        loc,
+        loc: undefined,
+        locCfi: location.cfi,
+        locCssSelector: location.cssSelector,
     };
     electronStore.set("readingLocation", obj);
 };
@@ -840,14 +842,25 @@ function startNavigatorExperiment() {
             });
         }
         const readStore = electronStore.get("readingLocation");
+        let location;
         let pubDocHrefToLoad;
-        let pubDocSelectorToGoto;
         if (readStore) {
             const obj = readStore[pathDecoded];
             if (obj && obj.doc) {
                 pubDocHrefToLoad = obj.doc;
                 if (obj.loc) {
-                    pubDocSelectorToGoto = obj.loc;
+                    location = { cfi: undefined, cssSelector: obj.loc };
+                }
+                else if (obj.locCssSelector) {
+                    location = { cfi: undefined, cssSelector: obj.locCssSelector };
+                }
+                if (obj.locCfi) {
+                    if (!location) {
+                        location = { cfi: obj.locCfi, cssSelector: "body" };
+                    }
+                    else {
+                        location.cfi = obj.locCfi;
+                    }
                 }
             }
         }
@@ -889,7 +902,7 @@ function startNavigatorExperiment() {
             rootHtmlElement.addEventListener(index_1.DOM_EVENT_SHOW_VIEWPORT, () => {
                 unhideWebView();
             });
-            index_1.installNavigatorDOM(_publication, publicationJsonUrl, rootHtmlElementID, preloadPath, pubDocHrefToLoad, pubDocSelectorToGoto);
+            index_1.installNavigatorDOM(_publication, publicationJsonUrl, rootHtmlElementID, preloadPath, pubDocHrefToLoad, location);
         }, 500);
     })();
 }
