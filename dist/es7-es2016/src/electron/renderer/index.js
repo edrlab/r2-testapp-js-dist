@@ -18,6 +18,8 @@ const index_4 = require("./riots/linktree/index_");
 const index_5 = require("./riots/menuselect/index_");
 const SystemFonts = require("system-font-families");
 const debounce = require("debounce");
+const console_redirect_1 = require("r2-navigator-js/dist/es7-es2016/src/electron/renderer/console-redirect");
+console_redirect_1.consoleRedirect("r2:testapp#electron/renderer/index", process.stdout, process.stderr, true);
 const IS_DEV = (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev");
 const queryParams = querystring_1.getURLQueryParams();
 electron_1.webFrame.registerURLSchemeAsSecure(sessions_1.READIUM2_ELECTRON_HTTP_PROTOCOL);
@@ -184,7 +186,8 @@ electronStore.onChanged("basicLinkTitles", (newValue, oldValue) => {
 let snackBar;
 let drawer;
 window.onerror = (err) => {
-    console.log("Error", err);
+    console.log("window.onerror:");
+    console.log(err);
 };
 electron_1.ipcRenderer.on(events_1.R2_EVENT_TRY_LCP_PASS_RES, (_event, payload) => {
     if (!payload.okay && payload.error) {
