@@ -124,7 +124,8 @@ electronStore.onChanged("styling.night", function (newValue, oldValue) {
     if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
         return;
     }
-    var nightSwitch = document.getElementById("night_switch-input");
+    var nightSwitchEl = document.getElementById("night_switch");
+    var nightSwitch = nightSwitchEl.mdcSwitch;
     nightSwitch.checked = newValue;
     readiumCssOnOff();
 });
@@ -132,15 +133,17 @@ electronStore.onChanged("styling.align", function (newValue, oldValue) {
     if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
         return;
     }
-    var nightSwitch = document.getElementById("justify_switch-input");
-    nightSwitch.checked = (newValue === "justify");
+    var justifySwitchEl = document.getElementById("justify_switch");
+    var justifySwitch = justifySwitchEl.mdcSwitch;
+    justifySwitch.checked = (newValue === "justify");
     readiumCssOnOff();
 });
 electronStore.onChanged("styling.paged", function (newValue, oldValue) {
     if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
         return;
     }
-    var paginateSwitch = document.getElementById("paginate_switch-input");
+    var paginateSwitchEl = document.getElementById("paginate_switch");
+    var paginateSwitch = paginateSwitchEl.mdcSwitch;
     paginateSwitch.checked = newValue;
     readiumCssOnOff();
 });
@@ -164,14 +167,18 @@ electronStore.onChanged("styling.readiumcss", function (newValue, oldValue) {
     if (newValue) {
         ensureSliderLayout();
     }
-    var readiumcssSwitch = document.getElementById("readiumcss_switch-input");
+    var readiumcssSwitchEl = document.getElementById("readiumcss_switch");
+    var readiumcssSwitch = readiumcssSwitchEl.mdcSwitch;
     readiumcssSwitch.checked = newValue;
     readiumCssOnOff();
-    var justifySwitch = document.getElementById("justify_switch-input");
+    var justifySwitchEl = document.getElementById("justify_switch");
+    var justifySwitch = justifySwitchEl.mdcSwitch;
     justifySwitch.disabled = !newValue;
-    var paginateSwitch = document.getElementById("paginate_switch-input");
+    var paginateSwitchEl = document.getElementById("paginate_switch");
+    var paginateSwitch = paginateSwitchEl.mdcSwitch;
     paginateSwitch.disabled = !newValue;
-    var nightSwitch = document.getElementById("night_switch-input");
+    var nightSwitchEl = document.getElementById("night_switch");
+    var nightSwitch = nightSwitchEl.mdcSwitch;
     nightSwitch.disabled = !newValue;
     if (!newValue) {
         electronStore.set("styling.night", false);
@@ -181,7 +188,8 @@ electronStore.onChanged("basicLinkTitles", function (newValue, oldValue) {
     if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
         return;
     }
-    var basicSwitch = document.getElementById("nav_basic_switch-input");
+    var basicSwitchEl = document.getElementById("nav_basic_switch");
+    var basicSwitch = basicSwitchEl.mdcSwitch;
     basicSwitch.checked = !newValue;
 });
 var snackBar;
@@ -522,41 +530,51 @@ window.addEventListener("DOMContentLoaded", function () {
     initFontSelector();
     initFontSizeSelector();
     initLineHeightSelector();
-    var nightSwitch = document.getElementById("night_switch-input");
+    var nightSwitchEl = document.getElementById("night_switch");
+    var nightSwitch = new window.mdc.switchControl.MDCSwitch(nightSwitchEl);
+    nightSwitchEl.mdcSwitch = nightSwitch;
     nightSwitch.checked = electronStore.get("styling.night");
-    nightSwitch.addEventListener("change", function (_event) {
+    nightSwitchEl.addEventListener("change", function (_event) {
         var checked = nightSwitch.checked;
         electronStore.set("styling.night", checked);
     });
     nightSwitch.disabled = !electronStore.get("styling.readiumcss");
-    var justifySwitch = document.getElementById("justify_switch-input");
+    var justifySwitchEl = document.getElementById("justify_switch");
+    var justifySwitch = new window.mdc.switchControl.MDCSwitch(justifySwitchEl);
+    justifySwitchEl.mdcSwitch = justifySwitch;
     justifySwitch.checked = electronStore.get("styling.align") === "justify";
-    justifySwitch.addEventListener("change", function (_event) {
+    justifySwitchEl.addEventListener("change", function (_event) {
         var checked = justifySwitch.checked;
         electronStore.set("styling.align", checked ? "justify" : "initial");
     });
     justifySwitch.disabled = !electronStore.get("styling.readiumcss");
-    var paginateSwitch = document.getElementById("paginate_switch-input");
+    var paginateSwitchEl = document.getElementById("paginate_switch");
+    var paginateSwitch = new window.mdc.switchControl.MDCSwitch(paginateSwitchEl);
+    paginateSwitchEl.mdcSwitch = paginateSwitch;
     paginateSwitch.checked = electronStore.get("styling.paged");
-    paginateSwitch.addEventListener("change", function (_event) {
+    paginateSwitchEl.addEventListener("change", function (_event) {
         var checked = paginateSwitch.checked;
         electronStore.set("styling.paged", checked);
     });
     paginateSwitch.disabled = !electronStore.get("styling.readiumcss");
-    var readiumcssSwitch = document.getElementById("readiumcss_switch-input");
+    var readiumcssSwitchEl = document.getElementById("readiumcss_switch");
+    var readiumcssSwitch = new window.mdc.switchControl.MDCSwitch(readiumcssSwitchEl);
+    readiumcssSwitchEl.mdcSwitch = readiumcssSwitch;
     readiumcssSwitch.checked = electronStore.get("styling.readiumcss");
     var stylingWrapper = document.getElementById("stylingWrapper");
     stylingWrapper.style.display = readiumcssSwitch.checked ? "block" : "none";
     if (readiumcssSwitch.checked) {
         ensureSliderLayout();
     }
-    readiumcssSwitch.addEventListener("change", function (_event) {
+    readiumcssSwitchEl.addEventListener("change", function (_event) {
         var checked = readiumcssSwitch.checked;
         electronStore.set("styling.readiumcss", checked);
     });
-    var basicSwitch = document.getElementById("nav_basic_switch-input");
+    var basicSwitchEl = document.getElementById("nav_basic_switch");
+    var basicSwitch = new window.mdc.switchControl.MDCSwitch(basicSwitchEl);
+    basicSwitchEl.mdcSwitch = basicSwitch;
     basicSwitch.checked = !electronStore.get("basicLinkTitles");
-    basicSwitch.addEventListener("change", function (_event) {
+    basicSwitchEl.addEventListener("change", function (_event) {
         var checked = basicSwitch.checked;
         electronStore.set("basicLinkTitles", !checked);
     });
