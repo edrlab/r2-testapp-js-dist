@@ -781,7 +781,7 @@ function startNavigatorExperiment() {
                 basic: true,
                 fixBasic: true,
                 handleLink: handleLink_,
-                links: _publicationJSON.spine,
+                links: (_publicationJSON.spine || _publicationJSON.readingOrder),
                 url: publicationJsonUrl,
             };
             index_2.riotMountLinkList("#reader_controls_SPINE", opts);
