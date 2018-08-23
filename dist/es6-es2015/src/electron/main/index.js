@@ -33,9 +33,9 @@ const lsd_1 = require("./lsd");
 const lsd_deviceid_manager_1 = require("./lsd-deviceid-manager");
 const electronStoreLSD = new store_electron_1.StoreElectron("readium2-testapp-lsd", {});
 const deviceIDManager = lsd_deviceid_manager_1.getDeviceIDManager(electronStoreLSD, "Readium2 Electron desktop app");
-init_globals_2.initGlobalConverters_GENERIC();
-init_globals_2.initGlobalConverters_SHARED();
 init_globals_1.initGlobalConverters_OPDS();
+init_globals_2.initGlobalConverters_SHARED();
+init_globals_2.initGlobalConverters_GENERIC();
 const IS_DEV = (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev");
 const lcpPluginPath = IS_DEV ?
     path.join(process.cwd(), "LCP", "lcp.node") :

@@ -49,9 +49,9 @@ var electronStore = new store_electron_1.StoreElectron("readium2-testapp", {
     },
 });
 var electronStoreLCP = new store_electron_1.StoreElectron("readium2-testapp-lcp", {});
-init_globals_2.initGlobalConverters_GENERIC();
-init_globals_2.initGlobalConverters_SHARED();
 init_globals_1.initGlobalConverters_OPDS();
+init_globals_2.initGlobalConverters_SHARED();
+init_globals_2.initGlobalConverters_GENERIC();
 var pubServerRoot = queryParams["pubServerRoot"];
 console.log(pubServerRoot);
 var computeReadiumCssJsonMessage = function () {
