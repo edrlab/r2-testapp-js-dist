@@ -12,7 +12,8 @@ const browser_window_tracker_1 = require("r2-navigator-js/dist/es8-es2017/src/el
 const lsd_injectlcpl_1 = require("r2-navigator-js/dist/es8-es2017/src/electron/main/lsd-injectlcpl");
 const readium_css_1 = require("r2-navigator-js/dist/es8-es2017/src/electron/main/readium-css");
 const sessions_2 = require("r2-navigator-js/dist/es8-es2017/src/electron/main/sessions");
-const init_globals_1 = require("r2-shared-js/dist/es8-es2017/src/init-globals");
+const init_globals_1 = require("r2-opds-js/dist/es8-es2017/src/opds/init-globals");
+const init_globals_2 = require("r2-shared-js/dist/es8-es2017/src/init-globals");
 const server_1 = require("r2-streamer-js/dist/es8-es2017/src/http/server");
 const UrlUtils_1 = require("r2-utils-js/dist/es8-es2017/src/_utils/http/UrlUtils");
 const BufferUtils_1 = require("r2-utils-js/dist/es8-es2017/src/_utils/stream/BufferUtils");
@@ -31,7 +32,9 @@ const lsd_1 = require("./lsd");
 const lsd_deviceid_manager_1 = require("./lsd-deviceid-manager");
 const electronStoreLSD = new store_electron_1.StoreElectron("readium2-testapp-lsd", {});
 const deviceIDManager = lsd_deviceid_manager_1.getDeviceIDManager(electronStoreLSD, "Readium2 Electron desktop app");
-init_globals_1.initGlobals();
+init_globals_2.initGlobalConverters_GENERIC();
+init_globals_2.initGlobalConverters_SHARED();
+init_globals_1.initGlobalConverters_OPDS();
 const IS_DEV = (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev");
 const lcpPluginPath = IS_DEV ?
     path.join(process.cwd(), "LCP", "lcp.node") :

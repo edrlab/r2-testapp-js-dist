@@ -5,8 +5,10 @@ const path = require("path");
 const publication_1 = require("r2-shared-js/dist/es6-es2015/src/models/publication");
 const sessions_1 = require("r2-navigator-js/dist/es6-es2015/src/electron/common/sessions");
 const querystring_1 = require("r2-navigator-js/dist/es6-es2015/src/electron/renderer/common/querystring");
+const console_redirect_1 = require("r2-navigator-js/dist/es6-es2015/src/electron/renderer/console-redirect");
 const index_1 = require("r2-navigator-js/dist/es6-es2015/src/electron/renderer/index");
-const init_globals_1 = require("r2-shared-js/dist/es6-es2015/src/init-globals");
+const init_globals_1 = require("r2-opds-js/dist/es6-es2015/src/opds/init-globals");
+const init_globals_2 = require("r2-shared-js/dist/es6-es2015/src/init-globals");
 const UrlUtils_1 = require("r2-utils-js/dist/es6-es2015/src/_utils/http/UrlUtils");
 const electron_1 = require("electron");
 const ta_json_1 = require("ta-json");
@@ -18,7 +20,6 @@ const index_4 = require("./riots/linktree/index_");
 const index_5 = require("./riots/menuselect/index_");
 const SystemFonts = require("system-font-families");
 const debounce = require("debounce");
-const console_redirect_1 = require("r2-navigator-js/dist/es6-es2015/src/electron/renderer/console-redirect");
 console_redirect_1.consoleRedirect("r2:testapp#electron/renderer/index", process.stdout, process.stderr, true);
 const IS_DEV = (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev");
 const queryParams = querystring_1.getURLQueryParams();
@@ -47,7 +48,9 @@ const electronStore = new store_electron_1.StoreElectron("readium2-testapp", {
     },
 });
 const electronStoreLCP = new store_electron_1.StoreElectron("readium2-testapp-lcp", {});
-init_globals_1.initGlobals();
+init_globals_2.initGlobalConverters_GENERIC();
+init_globals_2.initGlobalConverters_SHARED();
+init_globals_1.initGlobalConverters_OPDS();
 const pubServerRoot = queryParams["pubServerRoot"];
 console.log(pubServerRoot);
 const computeReadiumCssJsonMessage = () => {
