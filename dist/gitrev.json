@@ -1,9 +1,9 @@
 {
-  "short": "1b9f819",
-  "long": "1b9f819a1594907aafd95e8d7dd6ded0c10797f4",
+  "short": "faf11ab",
+  "long": "faf11abdf3eb533837ceae4060258f235950ba46",
   "branch": "develop",
-  "date": "2018-08-30T00:10:41.000Z",
+  "date": "2018-08-30T17:59:51.000Z",
   "dirty": true,
-  "urlHistory": "https://github.com/edrlab/r2-testapp-js/commits/1b9f819a1594907aafd95e8d7dd6ded0c10797f4",
-  "urlDiff": "https://github.com/edrlab/r2-testapp-js/compare/1b9f819a1594907aafd95e8d7dd6ded0c10797f4...develop"
+  "urlHistory": "https://github.com/readium/r2-testapp-js/commits/faf11abdf3eb533837ceae4060258f235950ba46",
+  "urlDiff": "https://github.com/readium/r2-testapp-js/compare/faf11abdf3eb533837ceae4060258f235950ba46...develop"
 }

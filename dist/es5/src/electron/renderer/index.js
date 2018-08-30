@@ -524,7 +524,7 @@ window.addEventListener("DOMContentLoaded", function () {
     h1.textContent = pathFileName;
     installKeyboardMouseFocusHandler();
     var drawerElement = document.getElementById("drawer");
-    drawer = new window.mdc.drawer.MDCTemporaryDrawer(drawerElement);
+    drawer = new window.mdc.drawer.MDCDrawer(drawerElement);
     drawerElement.mdcTemporaryDrawer = drawer;
     var drawerButton = document.getElementById("drawerButton");
     drawerButton.addEventListener("click", function () {
