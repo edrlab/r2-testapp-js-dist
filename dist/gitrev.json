@@ -1,9 +1,9 @@
 {
-  "short": "186a1a6",
-  "long": "186a1a65a732f57c123028203f11e124ec372dc4",
+  "short": "3a3e325",
+  "long": "3a3e32548cbadde9e72eaef66f6a983faba8cea2",
   "branch": "develop",
-  "date": "2018-09-19T11:43:20.000Z",
+  "date": "2018-09-19T13:17:48.000Z",
   "dirty": true,
-  "urlHistory": "https://github.com/readium/r2-testapp-js/commits/186a1a65a732f57c123028203f11e124ec372dc4",
-  "urlDiff": "https://github.com/readium/r2-testapp-js/compare/186a1a65a732f57c123028203f11e124ec372dc4...develop"
+  "urlHistory": "https://github.com/readium/r2-testapp-js/commits/3a3e32548cbadde9e72eaef66f6a983faba8cea2",
+  "urlDiff": "https://github.com/readium/r2-testapp-js/compare/3a3e32548cbadde9e72eaef66f6a983faba8cea2...develop"
 }
