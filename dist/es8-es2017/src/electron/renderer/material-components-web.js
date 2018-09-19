@@ -2218,7 +2218,7 @@ var MDCList = function (_MDCComponent) {
 
       // Get the index of the element if it is a list item.
       if (eventTarget.classList.contains(__WEBPACK_IMPORTED_MODULE_3__constants__["a" /* cssClasses */].LIST_ITEM_CLASS)) {
-        index = this.listElements_.indexOf(eventTarget);
+        index = this.listElements.indexOf(eventTarget);
       }
 
       return index;
@@ -2277,7 +2277,7 @@ var MDCList = function (_MDCComponent) {
         }
 
         this.singleSelection = true;
-        this.selectedIndex = this.listElements_.indexOf(preselectedElement);
+        this.selectedIndex = this.listElements.indexOf(preselectedElement);
       }
     }
 
@@ -2293,50 +2293,50 @@ var MDCList = function (_MDCComponent) {
 
       return new __WEBPACK_IMPORTED_MODULE_1__foundation__["a" /* default */]( /** @type {!MDCListAdapter} */_extends({
         getListItemCount: function getListItemCount() {
-          return _this2.listElements_.length;
+          return _this2.listElements.length;
         },
         getFocusedElementIndex: function getFocusedElementIndex() {
-          return _this2.listElements_.indexOf(document.activeElement);
+          return _this2.listElements.indexOf(document.activeElement);
         },
         setAttributeForElementIndex: function setAttributeForElementIndex(index, attr, value) {
-          var element = _this2.listElements_[index];
+          var element = _this2.listElements[index];
           if (element) {
             element.setAttribute(attr, value);
           }
         },
         removeAttributeForElementIndex: function removeAttributeForElementIndex(index, attr) {
-          var element = _this2.listElements_[index];
+          var element = _this2.listElements[index];
           if (element) {
             element.removeAttribute(attr);
           }
         },
         addClassForElementIndex: function addClassForElementIndex(index, className) {
-          var element = _this2.listElements_[index];
+          var element = _this2.listElements[index];
           if (element) {
             element.classList.add(className);
           }
         },
         removeClassForElementIndex: function removeClassForElementIndex(index, className) {
-          var element = _this2.listElements_[index];
+          var element = _this2.listElements[index];
           if (element) {
             element.classList.remove(className);
           }
         },
         focusItemAtIndex: function focusItemAtIndex(index) {
-          var element = _this2.listElements_[index];
+          var element = _this2.listElements[index];
           if (element) {
             element.focus();
           }
         },
         setTabIndexForListItemChildren: function setTabIndexForListItemChildren(listItemIndex, tabIndexValue) {
-          var element = _this2.listElements_[listItemIndex];
+          var element = _this2.listElements[listItemIndex];
           var listItemChildren = [].slice.call(element.querySelectorAll(__WEBPACK_IMPORTED_MODULE_3__constants__["b" /* strings */].FOCUSABLE_CHILD_ELEMENTS));
           listItemChildren.forEach(function (ele) {
             return ele.setAttribute('tabindex', tabIndexValue);
           });
         },
         followHref: function followHref(index) {
-          var listItem = _this2.listElements_[index];
+          var listItem = _this2.listElements[index];
           if (listItem && listItem.href) {
             listItem.click();
           }
@@ -2352,7 +2352,7 @@ var MDCList = function (_MDCComponent) {
     /** @return Array<!Element>*/
 
   }, {
-    key: 'listElements_',
+    key: 'listElements',
     get: function get() {
       return [].slice.call(this.root_.querySelectorAll(__WEBPACK_IMPORTED_MODULE_3__constants__["b" /* strings */].ENABLED_ITEMS_SELECTOR));
     }
@@ -2486,11 +2486,14 @@ var MDCListFoundation = function (_MDCFoundation) {
         }
       );
     }
+
+    /**
+     * @param {!MDCListAdapter=} adapter
+     */
+
   }]);
 
-  function MDCListFoundation() {
-    var adapter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : /** @type {!MDCListFoundation} */{};
-
+  function MDCListFoundation(adapter) {
     _classCallCheck(this, MDCListFoundation);
 
     /** {boolean} */
@@ -7791,7 +7794,6 @@ var MDCSelectAdapter = function () {
 
 /** @enum {string} */
 var cssClasses = {
-  BOX: 'mdc-select--box',
   DISABLED: 'mdc-select--disabled',
   ROOT: 'mdc-select',
   OUTLINED: 'mdc-select--outlined'
@@ -10351,9 +10353,13 @@ var MDCRippleFoundation = function (_MDCFoundation) {
         if (this.activationTimer_) {
           clearTimeout(this.activationTimer_);
           this.activationTimer_ = 0;
-          var FG_ACTIVATION = MDCRippleFoundation.cssClasses.FG_ACTIVATION;
+          this.adapter_.removeClass(MDCRippleFoundation.cssClasses.FG_ACTIVATION);
+        }
 
-          this.adapter_.removeClass(FG_ACTIVATION);
+        if (this.fgDeactivationRemovalTimer_) {
+          clearTimeout(this.fgDeactivationRemovalTimer_);
+          this.fgDeactivationRemovalTimer_ = 0;
+          this.adapter_.removeClass(MDCRippleFoundation.cssClasses.FG_DEACTIVATION);
         }
 
         var _MDCRippleFoundation$2 = MDCRippleFoundation.cssClasses,
@@ -13019,6 +13025,9 @@ var MDCDrawer = function (_MDCComponent) {
 
     /** @private {?Function} */
     _this.handleScrimClick_;
+
+    /** @private {?MDCList} */
+    _this.list_;
     return _this;
   }
 
@@ -13032,10 +13041,15 @@ var MDCDrawer = function (_MDCComponent) {
     key: 'initialize',
     value: function initialize() {
       var focusTrapFactory = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : __WEBPACK_IMPORTED_MODULE_8_focus_trap___default.a;
+      var listFactory = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : function (el) {
+        return new __WEBPACK_IMPORTED_MODULE_4__material_list_index__["MDCList"](el);
+      };
 
       var listEl = /** @type {!Element} */this.root_.querySelector('.' + __WEBPACK_IMPORTED_MODULE_5__material_list_foundation__["a" /* default */].cssClasses.ROOT);
-      var list = __WEBPACK_IMPORTED_MODULE_4__material_list_index__["MDCList"].attachTo(listEl);
-      list.wrapFocus = true;
+      if (listEl) {
+        this.list_ = listFactory(listEl);
+        this.list_.wrapFocus = true;
+      }
       this.focusTrapFactory_ = focusTrapFactory;
     }
   }, {
@@ -13073,6 +13087,10 @@ var MDCDrawer = function (_MDCComponent) {
     value: function destroy() {
       this.root_.removeEventListener('keydown', this.handleKeydown_);
       this.root_.removeEventListener('transitionend', this.handleTransitionEnd_);
+
+      if (this.list_) {
+        this.list_.destroy();
+      }
 
       var MODAL = __WEBPACK_IMPORTED_MODULE_1__dismissible_foundation__["a" /* default */].cssClasses.MODAL;
 
@@ -16009,9 +16027,7 @@ var MDCLineRippleFoundation = function (_MDCFoundation) {
 
   }]);
 
-  function MDCLineRippleFoundation() {
-    var adapter = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : /** @type {!MDCLineRippleAdapter} */{};
-
+  function MDCLineRippleFoundation(adapter) {
     _classCallCheck(this, MDCLineRippleFoundation);
 
     /** @private {function(!Event): undefined} */
@@ -16449,7 +16465,7 @@ var MDCMenu = function (_MDCComponent) {
   }, {
     key: 'items',
     get: function get() {
-      return this.list_.listElements_;
+      return this.list_.listElements;
     }
   }, {
     key: 'quickOpen',
@@ -16714,7 +16730,7 @@ var MDCMenuFoundation = function (_MDCFoundation) {
 
       // Iterate through ancestors until we find the group or get to the list.
       while (!isGroup && !this.adapter_.elementContainsClass(parent, __WEBPACK_IMPORTED_MODULE_4__material_list_foundation__["a" /* default */].cssClasses.ROOT)) {
-        parent = this.adapter_.getParentElement(listItem);
+        parent = this.adapter_.getParentElement(parent);
         isGroup = this.adapter_.elementContainsClass(parent, __WEBPACK_IMPORTED_MODULE_2__constants__["a" /* cssClasses */].MENU_SELECTION_GROUP);
       }
 
@@ -17157,7 +17173,12 @@ var MDCNotchedOutlineFoundation = function (_MDCFoundation) {
       var height = this.adapter_.getHeight();
       var cornerWidth = radius + 1.2;
       var leadingStrokeLength = Math.abs(12 - cornerWidth);
-      var paddedNotchWidth = notchWidth + 8;
+
+      // If the notchWidth is 0, the the notched outline doesn't need to add padding.
+      var paddedNotchWidth = 0;
+      if (notchWidth > 0) {
+        paddedNotchWidth = notchWidth + 8;
+      }
 
       // The right, bottom, and left sides of the outline follow the same SVG path.
       var pathMiddle = 'a' + radius + ',' + radius + ' 0 0 1 ' + radius + ',' + radius + 'v' + (height - 2 * cornerWidth) + 'a' + radius + ',' + radius + ' 0 0 1 ' + -radius + ',' + radius + 'h' + (-width + 2 * cornerWidth) + 'a' + radius + ',' + radius + ' 0 0 1 ' + -radius + ',' + -radius + 'v' + (-height + 2 * cornerWidth) + 'a' + radius + ',' + radius + ' 0 0 1 ' + radius + ',' + -radius;
@@ -17780,6 +17801,8 @@ var MDCSelect = function (_MDCComponent) {
     _this.handleFocus_;
     /** @private {!Function} */
     _this.handleBlur_;
+    /** @private {!Function} */
+    _this.handleClick_;
     return _this;
   }
 
@@ -17834,7 +17857,7 @@ var MDCSelect = function (_MDCComponent) {
         this.outline_ = outlineFactory(outlineElement);
       }
 
-      if (this.root_.classList.contains(__WEBPACK_IMPORTED_MODULE_7__constants__["a" /* cssClasses */].BOX)) {
+      if (!this.root_.classList.contains(__WEBPACK_IMPORTED_MODULE_7__constants__["a" /* cssClasses */].OUTLINED)) {
         this.ripple = this.initRipple_();
       }
     }
@@ -17880,10 +17903,19 @@ var MDCSelect = function (_MDCComponent) {
       this.handleBlur_ = function () {
         return _this3.foundation_.handleBlur();
       };
+      this.handleClick_ = function (evt) {
+        return _this3.setTransformOrigin_(evt);
+      };
 
       this.nativeControl_.addEventListener('change', this.handleChange_);
       this.nativeControl_.addEventListener('focus', this.handleFocus_);
       this.nativeControl_.addEventListener('blur', this.handleBlur_);
+
+      if (this.lineRipple_) {
+        ['mousedown', 'touchstart'].forEach(function (evtType) {
+          _this3.nativeControl_.addEventListener(evtType, _this3.handleClick_);
+        });
+      }
 
       // Initially sync floating label
       this.foundation_.handleChange();
@@ -17895,9 +17927,14 @@ var MDCSelect = function (_MDCComponent) {
   }, {
     key: 'destroy',
     value: function destroy() {
+      var _this4 = this;
+
       this.nativeControl_.removeEventListener('change', this.handleChange_);
       this.nativeControl_.removeEventListener('focus', this.handleFocus_);
       this.nativeControl_.removeEventListener('blur', this.handleBlur_);
+      ['mousedown', 'touchstart'].forEach(function (evtType) {
+        _this4.nativeControl_.removeEventListener(evtType, _this4.handleClick_);
+      });
 
       if (this.ripple) {
         this.ripple.destroy();
@@ -17916,33 +17953,33 @@ var MDCSelect = function (_MDCComponent) {
   }, {
     key: 'getDefaultFoundation',
     value: function getDefaultFoundation() {
-      var _this4 = this;
+      var _this5 = this;
 
       return new __WEBPACK_IMPORTED_MODULE_5__foundation__["a" /* default */](
       /** @type {!MDCSelectAdapter} */_extends({
         addClass: function addClass(className) {
-          return _this4.root_.classList.add(className);
+          return _this5.root_.classList.add(className);
         },
         removeClass: function removeClass(className) {
-          return _this4.root_.classList.remove(className);
+          return _this5.root_.classList.remove(className);
         },
         hasClass: function hasClass(className) {
-          return _this4.root_.classList.contains(className);
+          return _this5.root_.classList.contains(className);
         },
         getValue: function getValue() {
-          return _this4.nativeControl_.value;
+          return _this5.nativeControl_.value;
         },
         isRtl: function isRtl() {
-          return window.getComputedStyle(_this4.root_).getPropertyValue('direction') === 'rtl';
+          return window.getComputedStyle(_this5.root_).getPropertyValue('direction') === 'rtl';
         },
         activateBottomLine: function activateBottomLine() {
-          if (_this4.lineRipple_) {
-            _this4.lineRipple_.activate();
+          if (_this5.lineRipple_) {
+            _this5.lineRipple_.activate();
           }
         },
         deactivateBottomLine: function deactivateBottomLine() {
-          if (_this4.lineRipple_) {
-            _this4.lineRipple_.deactivate();
+          if (_this5.lineRipple_) {
+            _this5.lineRipple_.deactivate();
           }
         }
       }, this.getOutlineAdapterMethods_(), this.getLabelAdapterMethods_()));
@@ -17959,20 +17996,20 @@ var MDCSelect = function (_MDCComponent) {
   }, {
     key: 'getOutlineAdapterMethods_',
     value: function getOutlineAdapterMethods_() {
-      var _this5 = this;
+      var _this6 = this;
 
       return {
         hasOutline: function hasOutline() {
-          return !!_this5.outline_;
+          return !!_this6.outline_;
         },
         notchOutline: function notchOutline(labelWidth, isRtl) {
-          if (_this5.outline_) {
-            _this5.outline_.notch(labelWidth, isRtl);
+          if (_this6.outline_) {
+            _this6.outline_.notch(labelWidth, isRtl);
           }
         },
         closeOutline: function closeOutline() {
-          if (_this5.outline_) {
-            _this5.outline_.closeNotch();
+          if (_this6.outline_) {
+            _this6.outline_.closeNotch();
           }
         }
       };
@@ -17989,23 +18026,36 @@ var MDCSelect = function (_MDCComponent) {
   }, {
     key: 'getLabelAdapterMethods_',
     value: function getLabelAdapterMethods_() {
-      var _this6 = this;
+      var _this7 = this;
 
       return {
         hasLabel: function hasLabel() {
-          return !!_this6.label_;
+          return !!_this7.label_;
         },
         floatLabel: function floatLabel(shouldFloat) {
-          if (_this6.label_) {
-            _this6.label_.float(shouldFloat);
+          if (_this7.label_) {
+            _this7.label_.float(shouldFloat);
           }
         },
         getLabelWidth: function getLabelWidth() {
-          if (_this6.label_) {
-            return _this6.label_.getWidth();
-          }
+          return _this7.label_ ? _this7.label_.getWidth() : 0;
         }
       };
+    }
+
+    /**
+     * Sets the line ripple's transform origin, so that the line ripple activate
+     * animation will animate out from the user's click location.
+     * @param {!(MouseEvent|TouchEvent)} evt
+     */
+
+  }, {
+    key: 'setTransformOrigin_',
+    value: function setTransformOrigin_(evt) {
+      var targetClientRect = evt.target.getBoundingClientRect();
+      var xCoordinate = evt.clientX;
+      var normalizedX = xCoordinate - targetClientRect.left;
+      this.lineRipple_.setRippleCenter(normalizedX);
     }
   }, {
     key: 'value',
@@ -18264,7 +18314,7 @@ var MDCSelectFoundation = function (_MDCFoundation) {
   }, {
     key: 'notchOutline',
     value: function notchOutline(openNotch) {
-      if (!this.adapter_.hasOutline() || !this.adapter_.hasLabel()) {
+      if (!this.adapter_.hasOutline()) {
         return;
       }
 
