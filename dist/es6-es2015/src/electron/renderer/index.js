@@ -11,7 +11,7 @@ const init_globals_1 = require("r2-opds-js/dist/es6-es2015/src/opds/init-globals
 const init_globals_2 = require("r2-shared-js/dist/es6-es2015/src/init-globals");
 const UrlUtils_1 = require("r2-utils-js/dist/es6-es2015/src/_utils/http/UrlUtils");
 const electron_1 = require("electron");
-const ta_json_1 = require("ta-json");
+const ta_json_x_1 = require("ta-json-x");
 const events_1 = require("../common/events");
 const store_electron_1 = require("../common/store-electron");
 const index_2 = require("./riots/linklist/index_");
@@ -755,7 +755,7 @@ function startNavigatorExperiment() {
         if (!_publicationJSON) {
             return;
         }
-        const _publication = ta_json_1.JSON.deserialize(_publicationJSON, publication_1.Publication);
+        const _publication = ta_json_x_1.JSON.deserialize(_publicationJSON, publication_1.Publication);
         if (_publication.Metadata && _publication.Metadata.Title) {
             let title;
             if (typeof _publication.Metadata.Title === "string") {

@@ -26,7 +26,7 @@ var filehound = require("filehound");
 var portfinder = require("portfinder");
 var request = require("request");
 var requestPromise = require("request-promise-native");
-var ta_json_1 = require("ta-json");
+var ta_json_x_1 = require("ta-json-x");
 var events_1 = require("../common/events");
 var store_electron_1 = require("../common/store-electron");
 var lcp_3 = require("./lcp");
@@ -120,7 +120,7 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                                 case 8:
                                     responseJson = global.JSON.parse(responseStr);
                                     debug(responseJson);
-                                    lcpl = ta_json_1.JSON.deserialize(responseJson, lcp_2.LCP);
+                                    lcpl = ta_json_x_1.JSON.deserialize(responseJson, lcp_2.LCP);
                                     lcpl.ZipPath = "META-INF/license.lcpl";
                                     lcpl.JsonSource = responseStr;
                                     lcpl.init();
@@ -169,7 +169,7 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                                     responseJson = global.JSON.parse(responseStr);
                                     debug(responseJson);
                                     try {
-                                        publication = ta_json_1.JSON.deserialize(responseJson, publication_1.Publication);
+                                        publication = ta_json_x_1.JSON.deserialize(responseJson, publication_1.Publication);
                                     }
                                     catch (erorz) {
                                         debug(erorz);
@@ -565,7 +565,7 @@ electron_1.app.on("ready", function () {
                                     }
                                     _a.label = 3;
                                 case 3:
-                                    if (!filePathToLoadOnLaunch) return [3, 5];
+                                    if (!(filePathToLoadOnLaunch && !fs.lstatSync(filePathToLoadOnLaunch).isDirectory())) return [3, 5];
                                     return [4, openFileDownload(filePathToLoadOnLaunch)];
                                 case 4:
                                     _a.sent();

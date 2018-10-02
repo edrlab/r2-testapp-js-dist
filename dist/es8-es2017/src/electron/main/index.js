@@ -24,7 +24,7 @@ const filehound = require("filehound");
 const portfinder = require("portfinder");
 const request = require("request");
 const requestPromise = require("request-promise-native");
-const ta_json_1 = require("ta-json");
+const ta_json_x_1 = require("ta-json-x");
 const events_1 = require("../common/events");
 const store_electron_1 = require("../common/store-electron");
 const lcp_3 = require("./lcp");
@@ -100,7 +100,7 @@ async function createElectronBrowserWindow(publicationFilePath, publicationUrl) 
             const responseJson = global.JSON.parse(responseStr);
             debug(responseJson);
             let lcpl;
-            lcpl = ta_json_1.JSON.deserialize(responseJson, lcp_2.LCP);
+            lcpl = ta_json_x_1.JSON.deserialize(responseJson, lcp_2.LCP);
             lcpl.ZipPath = "META-INF/license.lcpl";
             lcpl.JsonSource = responseStr;
             lcpl.init();
@@ -134,7 +134,7 @@ async function createElectronBrowserWindow(publicationFilePath, publicationUrl) 
             const responseJson = global.JSON.parse(responseStr);
             debug(responseJson);
             try {
-                publication = ta_json_1.JSON.deserialize(responseJson, publication_1.Publication);
+                publication = ta_json_x_1.JSON.deserialize(responseJson, publication_1.Publication);
             }
             catch (erorz) {
                 debug(erorz);
@@ -430,7 +430,7 @@ electron_1.app.on("ready", () => {
                     }
                 }
             }
-            if (filePathToLoadOnLaunch) {
+            if (filePathToLoadOnLaunch && !fs.lstatSync(filePathToLoadOnLaunch).isDirectory()) {
                 await openFileDownload(filePathToLoadOnLaunch);
                 return;
             }
