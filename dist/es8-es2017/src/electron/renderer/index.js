@@ -18,7 +18,7 @@ const index_3 = require("./riots/linklistgroup/index_");
 const index_4 = require("./riots/linktree/index_");
 const index_5 = require("./riots/menuselect/index_");
 const SystemFonts = require("system-font-families");
-const debounce = require("debounce");
+const debounce_1 = require("debounce");
 console_redirect_1.consoleRedirect("r2:testapp#electron/renderer/index", process.stdout, process.stderr, true);
 const IS_DEV = (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev");
 const queryParams = querystring_1.getURLQueryParams();
@@ -148,7 +148,7 @@ electronStore.onChanged("styling.paged", (newValue, oldValue) => {
     paginateSwitch.checked = newValue;
     readiumCssOnOff();
 });
-const readiumCssOnOff = debounce(() => {
+const readiumCssOnOff = debounce_1.debounce(() => {
     index_1.readiumCssOnOff();
 }, 500);
 function ensureSliderLayout() {
@@ -298,7 +298,7 @@ function showLcpDialog(message) {
         const lcpPassMessage = document.getElementById("lcpPassMessage");
         lcpPassMessage.textContent = message;
     }
-    lcpDialog.show();
+    lcpDialog.open();
     setTimeout(() => {
         const lcpPassInput = document.getElementById("lcpPassInput");
         lcpPassInput.focus();
@@ -310,7 +310,7 @@ function showLcpDialog(message) {
 function installKeyboardMouseFocusHandler() {
     let dateLastKeyboardEvent = new Date();
     let dateLastMouseEvent = new Date();
-    document.body.addEventListener("focusin", debounce((ev) => {
+    document.body.addEventListener("focusin", debounce_1.debounce((ev) => {
         const focusWasTriggeredByMouse = dateLastMouseEvent > dateLastKeyboardEvent;
         if (focusWasTriggeredByMouse) {
             if (ev.target && ev.target.classList) {
@@ -591,19 +591,33 @@ window.addEventListener("DOMContentLoaded", () => {
     const lcpPassInput = document.getElementById("lcpPassInput");
     lcpDialog = new window.mdc.dialog.MDCDialog(diagElem);
     diagElem.mdcDialog = lcpDialog;
-    lcpDialog.listen("MDCDialog:accept", () => {
-        const lcpPass = lcpPassInput.value;
-        const payload = {
-            isSha256Hex: false,
-            lcpPass,
-            publicationFilePath: pathDecoded,
-        };
-        electron_1.ipcRenderer.send(events_1.R2_EVENT_TRY_LCP_PASS, payload);
+    lcpDialog.listen("MDCDialog:opened", () => {
+        console.log("MDCDialog:opened");
     });
-    lcpDialog.listen("MDCDialog:cancel", () => {
-        setTimeout(() => {
-            showLcpDialog();
-        }, 10);
+    lcpDialog.listen("MDCDialog:closed", (event) => {
+        console.log("MDCDialog:closed");
+        if (event.detail.action === "close") {
+            console.log("MDCDialog:ACTION:close");
+            setTimeout(() => {
+                showLcpDialog();
+            }, 10);
+        }
+        else if (event.detail.action === "accept") {
+            console.log("MDCDialog:ACTION:accept");
+            const lcpPass = lcpPassInput.value;
+            const payload = {
+                isSha256Hex: false,
+                lcpPass,
+                publicationFilePath: pathDecoded,
+            };
+            electron_1.ipcRenderer.send(events_1.R2_EVENT_TRY_LCP_PASS, payload);
+        }
+        else {
+            console.log("!! MDCDialog:ACTION:" + event.detail.action);
+            setTimeout(() => {
+                showLcpDialog();
+            }, 10);
+        }
     });
     if (lcpPassInput) {
         lcpPassInput.addEventListener("keyup", (ev) => {
