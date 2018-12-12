@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = require("tslib");
 const path = require("path");
 const publication_1 = require("r2-shared-js/dist/es7-es2016/src/models/publication");
+const readium_css_settings_1 = require("r2-navigator-js/dist/es7-es2016/src/electron/common/readium-css-settings");
 const sessions_1 = require("r2-navigator-js/dist/es7-es2016/src/electron/common/sessions");
 const querystring_1 = require("r2-navigator-js/dist/es7-es2016/src/electron/renderer/common/querystring");
 const console_redirect_1 = require("r2-navigator-js/dist/es7-es2016/src/electron/renderer/console-redirect");
@@ -10,6 +11,7 @@ const index_1 = require("r2-navigator-js/dist/es7-es2016/src/electron/renderer/i
 const init_globals_1 = require("r2-opds-js/dist/es7-es2016/src/opds/init-globals");
 const init_globals_2 = require("r2-shared-js/dist/es7-es2016/src/init-globals");
 const UrlUtils_1 = require("r2-utils-js/dist/es7-es2016/src/_utils/http/UrlUtils");
+const debounce_1 = require("debounce");
 const electron_1 = require("electron");
 const ta_json_x_1 = require("ta-json-x");
 const events_1 = require("../common/events");
@@ -19,7 +21,6 @@ const index_3 = require("./riots/linklistgroup/index_");
 const index_4 = require("./riots/linktree/index_");
 const index_5 = require("./riots/menuselect/index_");
 const SystemFonts = require("system-font-families");
-const debounce_1 = require("debounce");
 console_redirect_1.consoleRedirect("r2:testapp#electron/renderer/index", process.stdout, process.stderr, true);
 const IS_DEV = (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev");
 const queryParams = querystring_1.getURLQueryParams();
@@ -56,9 +57,9 @@ console.log(pubServerRoot);
 const computeReadiumCssJsonMessage = () => {
     const on = electronStore.get("styling.readiumcss");
     if (on) {
-        const align = electronStore.get("styling.align");
+        const textAlign = electronStore.get("styling.textAlign");
         const colCount = electronStore.get("styling.colCount");
-        const dark = electronStore.get("styling.dark");
+        const darken = electronStore.get("styling.darken");
         const font = electronStore.get("styling.font");
         const fontSize = electronStore.get("styling.fontSize");
         const lineHeight = electronStore.get("styling.lineHeight");
@@ -67,26 +68,38 @@ const computeReadiumCssJsonMessage = () => {
         const paged = electronStore.get("styling.paged");
         const sepia = electronStore.get("styling.sepia");
         const cssJson = {
-            align,
-            colCount,
-            dark,
+            a11yNormalize: readium_css_settings_1.readiumCSSDefaults.a11yNormalize,
+            backgroundColor: readium_css_settings_1.readiumCSSDefaults.backgroundColor,
+            bodyHyphens: readium_css_settings_1.readiumCSSDefaults.bodyHyphens,
+            colCount: colCount === "1" ? readium_css_settings_1.colCountEnum.one : (colCount === "2" ? readium_css_settings_1.colCountEnum.two : readium_css_settings_1.colCountEnum.auto),
+            darken,
             font,
             fontSize,
             invert,
+            letterSpacing: readium_css_settings_1.readiumCSSDefaults.letterSpacing,
+            ligatures: readium_css_settings_1.readiumCSSDefaults.ligatures,
             lineHeight,
             night,
+            pageMargins: readium_css_settings_1.readiumCSSDefaults.pageMargins,
             paged,
+            paraIndent: readium_css_settings_1.readiumCSSDefaults.paraIndent,
+            paraSpacing: readium_css_settings_1.readiumCSSDefaults.paraSpacing,
             sepia,
+            textAlign: textAlign === "left" ? readium_css_settings_1.textAlignEnum.left :
+                (textAlign === "right" ? readium_css_settings_1.textAlignEnum.right :
+                    (textAlign === "justify" ? readium_css_settings_1.textAlignEnum.justify : readium_css_settings_1.textAlignEnum.start)),
+            textColor: readium_css_settings_1.readiumCSSDefaults.textColor,
+            typeScale: readium_css_settings_1.readiumCSSDefaults.typeScale,
+            wordSpacing: readium_css_settings_1.readiumCSSDefaults.wordSpacing,
         };
         const jsonMsg = {
-            injectCSS: "yes",
             setCSS: cssJson,
             urlRoot: pubServerRoot,
         };
         return jsonMsg;
     }
     else {
-        return { injectCSS: "rollback", setCSS: "rollback" };
+        return { setCSS: undefined };
     }
 };
 index_1.setReadiumCssJsonGetter(computeReadiumCssJsonMessage);
@@ -94,16 +107,18 @@ const getEpubReadingSystem = () => {
     return { name: "Readium2 test app", version: "0.0.1-alpha.1" };
 };
 index_1.setEpubReadingSystemJsonGetter(getEpubReadingSystem);
-const saveReadingLocation = (doc, location) => {
+const saveReadingLocation = (location) => {
     let obj = electronStore.get("readingLocation");
     if (!obj) {
         obj = {};
     }
     obj[pathDecoded] = {
-        doc,
+        doc: location.locator.href,
         loc: undefined,
-        locCfi: location.cfi,
-        locCssSelector: location.cssSelector,
+        locCfi: location.locator.locations.cfi,
+        locCssSelector: location.locator.locations.cssSelector,
+        locPosition: location.locator.locations.position,
+        locProgression: location.locator.locations.progression,
     };
     electronStore.set("readingLocation", obj);
 };
@@ -131,7 +146,7 @@ electronStore.onChanged("styling.night", (newValue, oldValue) => {
     nightSwitch.checked = newValue;
     readiumCssOnOff();
 });
-electronStore.onChanged("styling.align", (newValue, oldValue) => {
+electronStore.onChanged("styling.textAlign", (newValue, oldValue) => {
     if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
         return;
     }
@@ -438,9 +453,16 @@ const initFontSelector = () => {
         selected: selectedID,
     };
     const tag = index_5.riotMountMenuSelect("#fontSelect", opts)[0];
-    tag.on("selectionChanged", (val) => {
-        val = val.replace(ID_PREFIX, "");
-        electronStore.set("styling.font", val);
+    tag.on("selectionChanged", (index) => {
+        console.log("selectionChanged");
+        console.log(index);
+        let id = tag.getIdForIndex(index);
+        console.log(id);
+        if (!id) {
+            return;
+        }
+        id = id.replace(ID_PREFIX, "");
+        electronStore.set("styling.font", id);
     });
     electronStore.onChanged("styling.font", (newValue, oldValue) => {
         if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
@@ -531,10 +553,10 @@ window.addEventListener("DOMContentLoaded", () => {
     const justifySwitchEl = document.getElementById("justify_switch");
     const justifySwitch = new window.mdc.switchControl.MDCSwitch(justifySwitchEl);
     justifySwitchEl.mdcSwitch = justifySwitch;
-    justifySwitch.checked = electronStore.get("styling.align") === "justify";
+    justifySwitch.checked = electronStore.get("styling.textAlign") === "justify";
     justifySwitchEl.addEventListener("change", (_event) => {
         const checked = justifySwitch.checked;
-        electronStore.set("styling.align", checked ? "justify" : "initial");
+        electronStore.set("styling.textAlign", checked ? "justify" : "initial");
     });
     justifySwitch.disabled = !electronStore.get("styling.readiumcss");
     const paginateSwitchEl = document.getElementById("paginate_switch");
@@ -882,23 +904,21 @@ function startNavigatorExperiment() {
         }
         const readStore = electronStore.get("readingLocation");
         let location;
-        let pubDocHrefToLoad;
         if (readStore) {
             const obj = readStore[pathDecoded];
             if (obj && obj.doc) {
-                pubDocHrefToLoad = obj.doc;
                 if (obj.loc) {
-                    location = { cfi: undefined, cssSelector: obj.loc };
+                    location = { href: obj.doc, locations: { cfi: undefined, cssSelector: obj.loc } };
                 }
                 else if (obj.locCssSelector) {
-                    location = { cfi: undefined, cssSelector: obj.locCssSelector };
+                    location = { href: obj.doc, locations: { cfi: undefined, cssSelector: obj.locCssSelector } };
                 }
                 if (obj.locCfi) {
                     if (!location) {
-                        location = { cfi: obj.locCfi, cssSelector: "body" };
+                        location = { href: obj.doc, locations: { cfi: obj.locCfi, cssSelector: "body" } };
                     }
                     else {
-                        location.cfi = obj.locCfi;
+                        location.locations.cfi = obj.locCfi;
                     }
                 }
             }
@@ -941,13 +961,16 @@ function startNavigatorExperiment() {
             rootHtmlElement.addEventListener(index_1.DOM_EVENT_SHOW_VIEWPORT, () => {
                 unhideWebView();
             });
-            index_1.installNavigatorDOM(_publication, publicationJsonUrl, rootHtmlElementID, preloadPath, pubDocHrefToLoad, location);
+            index_1.installNavigatorDOM(_publication, publicationJsonUrl, rootHtmlElementID, preloadPath, location);
         }, 500);
     }))();
 }
 const ELEMENT_ID_HIDE_PANEL = "r2_navigator_reader_chrome_HIDE";
 let _viewHideInterval;
 const unhideWebView = () => {
+    if (window) {
+        return;
+    }
     if (_viewHideInterval) {
         clearInterval(_viewHideInterval);
         _viewHideInterval = undefined;
@@ -961,6 +984,9 @@ const unhideWebView = () => {
     }
 };
 const hideWebView = () => {
+    if (window) {
+        return;
+    }
     const hidePanel = document.getElementById(ELEMENT_ID_HIDE_PANEL);
     if (hidePanel && hidePanel.style.display !== "block") {
         hidePanel.style.display = "block";
@@ -974,11 +1000,11 @@ function handleLink_(href) {
     if (drawer.open) {
         drawer.open = false;
         setTimeout(() => {
-            index_1.handleLink(href, undefined, false);
+            index_1.handleLinkUrl(href);
         }, 200);
     }
     else {
-        index_1.handleLink(href, undefined, false);
+        index_1.handleLinkUrl(href);
     }
 }
 //# sourceMappingURL=index.js.map

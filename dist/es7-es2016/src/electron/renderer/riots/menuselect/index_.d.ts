@@ -13,7 +13,9 @@ export interface IRiotTagMenuSelect extends RiotTag {
     setDisabled: (disabled: boolean) => void;
     setSelectedItem: (item: string) => void;
     getIndexForId: (id: string) => number | undefined;
+    getIdForIndex: (index: number) => string | undefined;
     getIndexForLabel: (label: string) => number | undefined;
+    getLabelForIndex: (index: number) => string | undefined;
     getIdForLabel: (label: string) => string | undefined;
     getLabelForId: (id: string) => string | undefined;
 }

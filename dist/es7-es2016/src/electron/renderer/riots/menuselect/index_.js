@@ -38,6 +38,18 @@ window.riot_menuselect = function (_opts) {
         });
         return found ? found.id : undefined;
     };
+    that.getIdForIndex = function (index) {
+        const found = this.opts.options.find((_option, i) => {
+            return index === i;
+        });
+        return found ? found.id : undefined;
+    };
+    that.getLabelForIndex = function (index) {
+        const found = this.opts.options.find((_option, i) => {
+            return index === i;
+        });
+        return found ? found.label : undefined;
+    };
     that.setSelectedItem = function (item) {
         let index = that.getIndexForId(item);
         if (typeof index === "undefined" || index < 0) {
@@ -59,7 +71,7 @@ window.riot_menuselect = function (_opts) {
         that.root.mdcSelect = mdcSelector;
         mdcSelector.disabled = that.opts.disabled;
         mdcSelector.listen("change", (ev) => {
-            that.trigger("selectionChanged", ev.target.value);
+            that.trigger("selectionChanged", ev.target.selectedIndex);
         });
     });
 };
