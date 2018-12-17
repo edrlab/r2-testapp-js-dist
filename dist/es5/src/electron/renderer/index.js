@@ -3,7 +3,6 @@ var _this = this;
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = require("tslib");
 var path = require("path");
-var publication_1 = require("r2-shared-js/dist/es5/src/models/publication");
 var readium_css_settings_1 = require("r2-navigator-js/dist/es5/src/electron/common/readium-css-settings");
 var sessions_1 = require("r2-navigator-js/dist/es5/src/electron/common/sessions");
 var querystring_1 = require("r2-navigator-js/dist/es5/src/electron/renderer/common/querystring");
@@ -11,7 +10,7 @@ var console_redirect_1 = require("r2-navigator-js/dist/es5/src/electron/renderer
 var index_1 = require("r2-navigator-js/dist/es5/src/electron/renderer/index");
 var init_globals_1 = require("r2-opds-js/dist/es5/src/opds/init-globals");
 var init_globals_2 = require("r2-shared-js/dist/es5/src/init-globals");
-var UrlUtils_1 = require("r2-utils-js/dist/es5/src/_utils/http/UrlUtils");
+var publication_1 = require("r2-shared-js/dist/es5/src/models/publication");
 var debounce_1 = require("debounce");
 var electron_1 = require("electron");
 var ta_json_x_1 = require("ta-json-x");
@@ -33,21 +32,21 @@ electron_1.webFrame.registerURLSchemeAsPrivileged(sessions_1.READIUM2_ELECTRON_H
     secure: true,
     supportFetchAPI: true,
 });
+var readiumCssDefaultsJson = readium_css_settings_1.readiumCSSDefaults;
+var readiumCssKeys = Object.keys(readium_css_settings_1.readiumCSSDefaults);
+readiumCssKeys.forEach(function (key) {
+    var value = readium_css_settings_1.readiumCSSDefaults[key];
+    if (typeof value === "undefined") {
+        readiumCssDefaultsJson[key] = null;
+    }
+    else {
+        readiumCssDefaultsJson[key] = value;
+    }
+});
 var electronStore = new store_electron_1.StoreElectron("readium2-testapp", {
     basicLinkTitles: true,
-    styling: {
-        align: "left",
-        colCount: "auto",
-        dark: false,
-        font: "DEFAULT",
-        fontSize: "100%",
-        invert: false,
-        lineHeight: "1.5",
-        night: false,
-        paged: false,
-        readiumcss: false,
-        sepia: false,
-    },
+    readiumCSS: readiumCssDefaultsJson,
+    readiumCSSEnable: false,
 });
 var electronStoreLCP = new store_electron_1.StoreElectron("readium2-testapp-lcp", {});
 init_globals_1.initGlobalConverters_OPDS();
@@ -56,43 +55,15 @@ init_globals_2.initGlobalConverters_GENERIC();
 var pubServerRoot = queryParams["pubServerRoot"];
 console.log(pubServerRoot);
 var computeReadiumCssJsonMessage = function () {
-    var on = electronStore.get("styling.readiumcss");
+    var on = electronStore.get("readiumCSSEnable");
     if (on) {
-        var textAlign = electronStore.get("styling.textAlign");
-        var colCount = electronStore.get("styling.colCount");
-        var darken = electronStore.get("styling.darken");
-        var font = electronStore.get("styling.font");
-        var fontSize = electronStore.get("styling.fontSize");
-        var lineHeight = electronStore.get("styling.lineHeight");
-        var invert = electronStore.get("styling.invert");
-        var night = electronStore.get("styling.night");
-        var paged = electronStore.get("styling.paged");
-        var sepia = electronStore.get("styling.sepia");
-        var cssJson = {
-            a11yNormalize: readium_css_settings_1.readiumCSSDefaults.a11yNormalize,
-            backgroundColor: readium_css_settings_1.readiumCSSDefaults.backgroundColor,
-            bodyHyphens: readium_css_settings_1.readiumCSSDefaults.bodyHyphens,
-            colCount: colCount === "1" ? readium_css_settings_1.colCountEnum.one : (colCount === "2" ? readium_css_settings_1.colCountEnum.two : readium_css_settings_1.colCountEnum.auto),
-            darken: darken,
-            font: font,
-            fontSize: fontSize,
-            invert: invert,
-            letterSpacing: readium_css_settings_1.readiumCSSDefaults.letterSpacing,
-            ligatures: readium_css_settings_1.readiumCSSDefaults.ligatures,
-            lineHeight: lineHeight,
-            night: night,
-            pageMargins: readium_css_settings_1.readiumCSSDefaults.pageMargins,
-            paged: paged,
-            paraIndent: readium_css_settings_1.readiumCSSDefaults.paraIndent,
-            paraSpacing: readium_css_settings_1.readiumCSSDefaults.paraSpacing,
-            sepia: sepia,
-            textAlign: textAlign === "left" ? readium_css_settings_1.textAlignEnum.left :
-                (textAlign === "right" ? readium_css_settings_1.textAlignEnum.right :
-                    (textAlign === "justify" ? readium_css_settings_1.textAlignEnum.justify : readium_css_settings_1.textAlignEnum.start)),
-            textColor: readium_css_settings_1.readiumCSSDefaults.textColor,
-            typeScale: readium_css_settings_1.readiumCSSDefaults.typeScale,
-            wordSpacing: readium_css_settings_1.readiumCSSDefaults.wordSpacing,
-        };
+        var cssJson = electronStore.get("readiumCSS");
+        console.log("---- readiumCSS -----");
+        console.log(cssJson);
+        console.log("-----");
+        if (!cssJson) {
+            cssJson = readium_css_settings_1.readiumCSSDefaults;
+        }
         var jsonMsg = {
             setCSS: cssJson,
             urlRoot: pubServerRoot,
@@ -130,15 +101,21 @@ var publicationJsonUrl_ = publicationJsonUrl.startsWith(sessions_1.READIUM2_ELEC
     sessions_1.convertCustomSchemeToHttpUrl(publicationJsonUrl) : publicationJsonUrl;
 console.log(publicationJsonUrl_);
 var pathBase64 = publicationJsonUrl_.
-    replace(/.*\/pub\/(.*)\/manifest.json/, "$1").
-    replace("*-URL_LCP_PASS_PLACEHOLDER-*", "");
+    replace(/.*\/pub\/(.*)\/manifest.json/, "$1");
 console.log(pathBase64);
 var pathDecoded = window.atob(pathBase64);
 console.log(pathDecoded);
 var pathFileName = pathDecoded.substr(pathDecoded.replace(/\\/g, "/").lastIndexOf("/") + 1, pathDecoded.length - 1);
 console.log(pathFileName);
 var lcpHint = queryParams["lcpHint"];
-electronStore.onChanged("styling.night", function (newValue, oldValue) {
+electronStore.onChanged("readiumCSS.colCount", function (newValue, oldValue) {
+    if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
+        return;
+    }
+    console.log("readiumCSS.colCount: ", oldValue, " => ", newValue);
+    readiumCssOnOff();
+});
+electronStore.onChanged("readiumCSS.night", function (newValue, oldValue) {
     if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
         return;
     }
@@ -147,7 +124,7 @@ electronStore.onChanged("styling.night", function (newValue, oldValue) {
     nightSwitch.checked = newValue;
     readiumCssOnOff();
 });
-electronStore.onChanged("styling.textAlign", function (newValue, oldValue) {
+electronStore.onChanged("readiumCSS.textAlign", function (newValue, oldValue) {
     if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
         return;
     }
@@ -156,7 +133,7 @@ electronStore.onChanged("styling.textAlign", function (newValue, oldValue) {
     justifySwitch.checked = (newValue === "justify");
     readiumCssOnOff();
 });
-electronStore.onChanged("styling.paged", function (newValue, oldValue) {
+electronStore.onChanged("readiumCSS.paged", function (newValue, oldValue) {
     if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
         return;
     }
@@ -176,7 +153,7 @@ function ensureSliderLayout() {
         lineHeightSelector.mdcSlider.layout();
     }, 100);
 }
-electronStore.onChanged("styling.readiumcss", function (newValue, oldValue) {
+electronStore.onChanged("readiumCSSEnable", function (newValue, oldValue) {
     if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
         return;
     }
@@ -199,7 +176,7 @@ electronStore.onChanged("styling.readiumcss", function (newValue, oldValue) {
     var nightSwitch = nightSwitchEl.mdcSwitch;
     nightSwitch.disabled = !newValue;
     if (!newValue) {
-        electronStore.set("styling.night", false);
+        electronStore.set("readiumCSS.night", false);
     }
 });
 electronStore.onChanged("basicLinkTitles", function (newValue, oldValue) {
@@ -298,12 +275,6 @@ electron_1.ipcRenderer.on(events_1.R2_EVENT_TRY_LCP_PASS_RES, function (_event, 
             }
             electronStoreLCP.set("lcp", lcpStore);
         }
-        if (publicationJsonUrl.indexOf("URL_LCP_PASS_PLACEHOLDER") > 0) {
-            var pazz = Buffer.from(payload.passSha256Hex).toString("base64");
-            pazz = UrlUtils_1.encodeURIComponent_RFC3986(pazz);
-            publicationJsonUrl = publicationJsonUrl.replace("URL_LCP_PASS_PLACEHOLDER", pazz);
-            console.log(publicationJsonUrl);
-        }
     }
     startNavigatorExperiment();
 });
@@ -351,24 +322,24 @@ var initLineHeightSelector = function () {
     var lineHeightSelector = document.getElementById("lineHeightSelector");
     var slider = new window.mdc.slider.MDCSlider(lineHeightSelector);
     lineHeightSelector.mdcSlider = slider;
-    slider.disabled = !electronStore.get("styling.readiumcss");
-    var val = electronStore.get("styling.lineHeight");
+    slider.disabled = !electronStore.get("readiumCSSEnable");
+    var val = electronStore.get("readiumCSS.lineHeight");
     if (val) {
         slider.value = parseFloat(val) * 100;
     }
     else {
         slider.value = 1.5 * 100;
     }
-    electronStore.onChanged("styling.readiumcss", function (newValue, oldValue) {
+    electronStore.onChanged("readiumCSSEnable", function (newValue, oldValue) {
         if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
             return;
         }
         slider.disabled = !newValue;
     });
     slider.listen("MDCSlider:change", function (event) {
-        electronStore.set("styling.lineHeight", "" + (event.detail.value / 100));
+        electronStore.set("readiumCSS.lineHeight", "" + (event.detail.value / 100));
     });
-    electronStore.onChanged("styling.lineHeight", function (newValue, oldValue) {
+    electronStore.onChanged("readiumCSS.lineHeight", function (newValue, oldValue) {
         if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
             return;
         }
@@ -380,24 +351,24 @@ var initFontSizeSelector = function () {
     var fontSizeSelector = document.getElementById("fontSizeSelector");
     var slider = new window.mdc.slider.MDCSlider(fontSizeSelector);
     fontSizeSelector.mdcSlider = slider;
-    slider.disabled = !electronStore.get("styling.readiumcss");
-    var val = electronStore.get("styling.fontSize");
+    slider.disabled = !electronStore.get("readiumCSSEnable");
+    var val = electronStore.get("readiumCSS.fontSize");
     if (val) {
         slider.value = parseInt(val.replace("%", ""), 10);
     }
     else {
         slider.value = 100;
     }
-    electronStore.onChanged("styling.readiumcss", function (newValue, oldValue) {
+    electronStore.onChanged("readiumCSSEnable", function (newValue, oldValue) {
         if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
             return;
         }
         slider.disabled = !newValue;
     });
     slider.listen("MDCSlider:change", function (event) {
-        electronStore.set("styling.fontSize", event.detail.value + "%");
+        electronStore.set("readiumCSS.fontSize", event.detail.value + "%");
     });
-    electronStore.onChanged("styling.fontSize", function (newValue, oldValue) {
+    electronStore.onChanged("readiumCSS.fontSize", function (newValue, oldValue) {
         if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
             return;
         }
@@ -440,7 +411,7 @@ var initFontSelector = function () {
             label: "Monospace",
             style: "font-family: \"Andale Mono\", Consolas, monospace;",
         }];
-    var selectedID = ID_PREFIX + electronStore.get("styling.font");
+    var selectedID = ID_PREFIX + electronStore.get("readiumCSS.font");
     var foundItem = options.find(function (item) {
         return item.id === selectedID;
     });
@@ -448,7 +419,7 @@ var initFontSelector = function () {
         selectedID = options[0].id;
     }
     var opts = {
-        disabled: !electronStore.get("styling.readiumcss"),
+        disabled: !electronStore.get("readiumCSSEnable"),
         label: "Font name",
         options: options,
         selected: selectedID,
@@ -463,16 +434,16 @@ var initFontSelector = function () {
             return;
         }
         id = id.replace(ID_PREFIX, "");
-        electronStore.set("styling.font", id);
+        electronStore.set("readiumCSS.font", id);
     });
-    electronStore.onChanged("styling.font", function (newValue, oldValue) {
+    electronStore.onChanged("readiumCSS.font", function (newValue, oldValue) {
         if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
             return;
         }
         tag.setSelectedItem(ID_PREFIX + newValue);
         readiumCssOnOff();
     });
-    electronStore.onChanged("styling.readiumcss", function (newValue, oldValue) {
+    electronStore.onChanged("readiumCSSEnable", function (newValue, oldValue) {
         if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
             return;
         }
@@ -507,7 +478,7 @@ var initFontSelector = function () {
                             };
                             arr_1.push(option);
                         });
-                        newSelectedID_1 = ID_PREFIX + electronStore.get("styling.font");
+                        newSelectedID_1 = ID_PREFIX + electronStore.get("readiumCSS.font");
                         newFoundItem = options.find(function (item) {
                             return item.id === newSelectedID_1;
                         });
@@ -558,34 +529,34 @@ window.addEventListener("DOMContentLoaded", function () {
     var nightSwitchEl = document.getElementById("night_switch");
     var nightSwitch = new window.mdc.switchControl.MDCSwitch(nightSwitchEl);
     nightSwitchEl.mdcSwitch = nightSwitch;
-    nightSwitch.checked = electronStore.get("styling.night");
+    nightSwitch.checked = electronStore.get("readiumCSS.night");
     nightSwitchEl.addEventListener("change", function (_event) {
         var checked = nightSwitch.checked;
-        electronStore.set("styling.night", checked);
+        electronStore.set("readiumCSS.night", checked);
     });
-    nightSwitch.disabled = !electronStore.get("styling.readiumcss");
+    nightSwitch.disabled = !electronStore.get("readiumCSSEnable");
     var justifySwitchEl = document.getElementById("justify_switch");
     var justifySwitch = new window.mdc.switchControl.MDCSwitch(justifySwitchEl);
     justifySwitchEl.mdcSwitch = justifySwitch;
-    justifySwitch.checked = electronStore.get("styling.textAlign") === "justify";
+    justifySwitch.checked = electronStore.get("readiumCSS.textAlign") === "justify";
     justifySwitchEl.addEventListener("change", function (_event) {
         var checked = justifySwitch.checked;
-        electronStore.set("styling.textAlign", checked ? "justify" : "initial");
+        electronStore.set("readiumCSS.textAlign", checked ? "justify" : "initial");
     });
-    justifySwitch.disabled = !electronStore.get("styling.readiumcss");
+    justifySwitch.disabled = !electronStore.get("readiumCSSEnable");
     var paginateSwitchEl = document.getElementById("paginate_switch");
     var paginateSwitch = new window.mdc.switchControl.MDCSwitch(paginateSwitchEl);
     paginateSwitchEl.mdcSwitch = paginateSwitch;
-    paginateSwitch.checked = electronStore.get("styling.paged");
+    paginateSwitch.checked = electronStore.get("readiumCSS.paged");
     paginateSwitchEl.addEventListener("change", function (_event) {
         var checked = paginateSwitch.checked;
-        electronStore.set("styling.paged", checked);
+        electronStore.set("readiumCSS.paged", checked);
     });
-    paginateSwitch.disabled = !electronStore.get("styling.readiumcss");
+    paginateSwitch.disabled = !electronStore.get("readiumCSSEnable");
     var readiumcssSwitchEl = document.getElementById("readiumcss_switch");
     var readiumcssSwitch = new window.mdc.switchControl.MDCSwitch(readiumcssSwitchEl);
     readiumcssSwitchEl.mdcSwitch = readiumcssSwitch;
-    readiumcssSwitch.checked = electronStore.get("styling.readiumcss");
+    readiumcssSwitch.checked = electronStore.get("readiumCSSEnable");
     var stylingWrapper = document.getElementById("stylingWrapper");
     stylingWrapper.style.display = readiumcssSwitch.checked ? "block" : "none";
     if (readiumcssSwitch.checked) {
@@ -593,7 +564,7 @@ window.addEventListener("DOMContentLoaded", function () {
     }
     readiumcssSwitchEl.addEventListener("change", function (_event) {
         var checked = readiumcssSwitch.checked;
-        electronStore.set("styling.readiumcss", checked);
+        electronStore.set("readiumCSSEnable", checked);
     });
     var basicSwitchEl = document.getElementById("nav_basic_switch");
     var basicSwitch = new window.mdc.switchControl.MDCSwitch(basicSwitchEl);
@@ -727,7 +698,7 @@ window.addEventListener("DOMContentLoaded", function () {
     });
     var buttonClearSettingsStyle = document.getElementById("buttonClearSettingsStyle");
     buttonClearSettingsStyle.addEventListener("click", function () {
-        electronStore.set("styling", electronStore.getDefaults().styling);
+        electronStore.set("readiumCSS", electronStore.getDefaults().readiumCSS);
         drawer.open = false;
         setTimeout(function () {
             var message = "Default styles.";
