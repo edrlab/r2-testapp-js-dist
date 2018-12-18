@@ -22,6 +22,7 @@ const UrlUtils_1 = require("r2-utils-js/dist/es8-es2017/src/_utils/http/UrlUtils
 const UrlUtils_2 = require("r2-utils-js/dist/es8-es2017/src/_utils/http/UrlUtils");
 const BufferUtils_1 = require("r2-utils-js/dist/es8-es2017/src/_utils/stream/BufferUtils");
 const zip_ex_1 = require("r2-utils-js/dist/es8-es2017/src/_utils/zip/zip-ex");
+const zip_ex_http_1 = require("r2-utils-js/dist/es8-es2017/src/_utils/zip/zip-ex-http");
 const debug_ = require("debug");
 const electron_1 = require("electron");
 const express = require("express");
@@ -35,7 +36,6 @@ const store_electron_1 = require("../common/store-electron");
 const lcp_3 = require("./lcp");
 const lsd_1 = require("./lsd");
 const lsd_deviceid_manager_1 = require("./lsd-deviceid-manager");
-const zip_ex_http_1 = require("./zip-ex-http");
 const SECURE = false;
 const electronStoreLSD = new store_electron_1.StoreElectron("readium2-testapp-lsd", {});
 const deviceIDManager = lsd_deviceid_manager_1.getDeviceIDManager(electronStoreLSD, "Readium2 Electron desktop app");
@@ -79,7 +79,9 @@ function isManifestJSON(urlOrPath) {
         const url = new url_1.URL(urlOrPath);
         p = url.pathname;
     }
-    return /manifest\.json$/.test(p);
+    const isMan = /.*manifest\.json[\?]?.*/.test(p);
+    debug("########### IS MANIFEST: " + isMan);
+    return isMan;
 }
 async function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
     debug("createElectronBrowserWindow() " + publicationFilePath + " : " + publicationUrl);
@@ -180,7 +182,7 @@ async function createElectronBrowserWindow(publicationFilePath, publicationUrl) 
             else {
                 const url = new url_1.URL(publicationFilePath);
                 const dirPath = path.dirname(p);
-                url.pathname = dirPath;
+                url.pathname = dirPath + "/";
                 const zip = await zip_ex_http_1.ZipExplodedHTTP.loadPromise(url.toString());
                 publication.AddToInternal("zip", zip);
             }

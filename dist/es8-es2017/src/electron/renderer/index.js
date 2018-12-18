@@ -99,9 +99,9 @@ const publicationJsonUrl_ = publicationJsonUrl.startsWith(sessions_1.READIUM2_EL
     sessions_1.convertCustomSchemeToHttpUrl(publicationJsonUrl) : publicationJsonUrl;
 console.log(publicationJsonUrl_);
 const pathBase64 = publicationJsonUrl_.
-    replace(/.*\/pub\/(.*)\/manifest.json/, "$1");
+    replace(/.*\/pub\/(.*)\/manifest.json.*/, "$1");
 console.log(pathBase64);
-const pathDecoded = window.atob(pathBase64);
+const pathDecoded = new Buffer(decodeURIComponent(pathBase64), "base64").toString("utf8");
 console.log(pathDecoded);
 const pathFileName = pathDecoded.substr(pathDecoded.replace(/\\/g, "/").lastIndexOf("/") + 1, pathDecoded.length - 1);
 console.log(pathFileName);
