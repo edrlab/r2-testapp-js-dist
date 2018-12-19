@@ -6,7 +6,6 @@ var path = require("path");
 var readium_css_settings_1 = require("r2-navigator-js/dist/es5/src/electron/common/readium-css-settings");
 var sessions_1 = require("r2-navigator-js/dist/es5/src/electron/common/sessions");
 var querystring_1 = require("r2-navigator-js/dist/es5/src/electron/renderer/common/querystring");
-var console_redirect_1 = require("r2-navigator-js/dist/es5/src/electron/renderer/console-redirect");
 var index_1 = require("r2-navigator-js/dist/es5/src/electron/renderer/index");
 var init_globals_1 = require("r2-opds-js/dist/es5/src/opds/init-globals");
 var init_globals_2 = require("r2-shared-js/dist/es5/src/init-globals");
@@ -21,7 +20,6 @@ var index_3 = require("./riots/linklistgroup/index_");
 var index_4 = require("./riots/linktree/index_");
 var index_5 = require("./riots/menuselect/index_");
 var SystemFonts = require("system-font-families");
-console_redirect_1.consoleRedirect("r2:testapp#electron/renderer/index", process.stdout, process.stderr, true);
 var IS_DEV = (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev");
 var queryParams = querystring_1.getURLQueryParams();
 electron_1.webFrame.registerURLSchemeAsSecure(sessions_1.READIUM2_ELECTRON_HTTP_PROTOCOL);
@@ -75,10 +73,7 @@ var computeReadiumCssJsonMessage = function () {
     }
 };
 index_1.setReadiumCssJsonGetter(computeReadiumCssJsonMessage);
-var getEpubReadingSystem = function () {
-    return { name: "Readium2 test app", version: "0.0.1-alpha.1" };
-};
-index_1.setEpubReadingSystemJsonGetter(getEpubReadingSystem);
+index_1.setEpubReadingSystemInfo({ name: "Readium2 test app", version: "0.0.1-alpha.1" });
 var saveReadingLocation = function (location) {
     var obj = electronStore.get("readingLocation");
     if (!obj) {
@@ -113,7 +108,7 @@ electronStore.onChanged("readiumCSS.colCount", function (newValue, oldValue) {
         return;
     }
     console.log("readiumCSS.colCount: ", oldValue, " => ", newValue);
-    readiumCssOnOff();
+    refreshReadiumCSS();
 });
 electronStore.onChanged("readiumCSS.night", function (newValue, oldValue) {
     if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
@@ -122,7 +117,7 @@ electronStore.onChanged("readiumCSS.night", function (newValue, oldValue) {
     var nightSwitchEl = document.getElementById("night_switch");
     var nightSwitch = nightSwitchEl.mdcSwitch;
     nightSwitch.checked = newValue;
-    readiumCssOnOff();
+    refreshReadiumCSS();
 });
 electronStore.onChanged("readiumCSS.textAlign", function (newValue, oldValue) {
     if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
@@ -131,7 +126,7 @@ electronStore.onChanged("readiumCSS.textAlign", function (newValue, oldValue) {
     var justifySwitchEl = document.getElementById("justify_switch");
     var justifySwitch = justifySwitchEl.mdcSwitch;
     justifySwitch.checked = (newValue === "justify");
-    readiumCssOnOff();
+    refreshReadiumCSS();
 });
 electronStore.onChanged("readiumCSS.paged", function (newValue, oldValue) {
     if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
@@ -140,9 +135,9 @@ electronStore.onChanged("readiumCSS.paged", function (newValue, oldValue) {
     var paginateSwitchEl = document.getElementById("paginate_switch");
     var paginateSwitch = paginateSwitchEl.mdcSwitch;
     paginateSwitch.checked = newValue;
-    readiumCssOnOff();
+    refreshReadiumCSS();
 });
-var readiumCssOnOff = debounce_1.debounce(function () {
+var refreshReadiumCSS = debounce_1.debounce(function () {
     index_1.readiumCssOnOff();
 }, 500);
 function ensureSliderLayout() {
@@ -165,7 +160,7 @@ electronStore.onChanged("readiumCSSEnable", function (newValue, oldValue) {
     var readiumcssSwitchEl = document.getElementById("readiumcss_switch");
     var readiumcssSwitch = readiumcssSwitchEl.mdcSwitch;
     readiumcssSwitch.checked = newValue;
-    readiumCssOnOff();
+    refreshReadiumCSS();
     var justifySwitchEl = document.getElementById("justify_switch");
     var justifySwitch = justifySwitchEl.mdcSwitch;
     justifySwitch.disabled = !newValue;
@@ -344,7 +339,7 @@ var initLineHeightSelector = function () {
             return;
         }
         slider.value = parseFloat(newValue) * 100;
-        readiumCssOnOff();
+        refreshReadiumCSS();
     });
 };
 var initFontSizeSelector = function () {
@@ -373,7 +368,7 @@ var initFontSizeSelector = function () {
             return;
         }
         slider.value = parseInt(newValue.replace("%", ""), 10);
-        readiumCssOnOff();
+        refreshReadiumCSS();
     });
 };
 var initFontSelector = function () {
@@ -441,7 +436,7 @@ var initFontSelector = function () {
             return;
         }
         tag.setSelectedItem(ID_PREFIX + newValue);
-        readiumCssOnOff();
+        refreshReadiumCSS();
     });
     electronStore.onChanged("readiumCSSEnable", function (newValue, oldValue) {
         if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
@@ -951,12 +946,6 @@ function startNavigatorExperiment() {
                             console.log("!rootHtmlElement ???");
                             return;
                         }
-                        rootHtmlElement.addEventListener(index_1.DOM_EVENT_HIDE_VIEWPORT, function () {
-                            hideWebView();
-                        });
-                        rootHtmlElement.addEventListener(index_1.DOM_EVENT_SHOW_VIEWPORT, function () {
-                            unhideWebView();
-                        });
                         index_1.installNavigatorDOM(_publication, publicationJsonUrl, rootHtmlElementID, preloadPath, location);
                     }, 500);
                     return [2];
@@ -964,37 +953,6 @@ function startNavigatorExperiment() {
         });
     }); })();
 }
-var ELEMENT_ID_HIDE_PANEL = "r2_navigator_reader_chrome_HIDE";
-var _viewHideInterval;
-var unhideWebView = function () {
-    if (window) {
-        return;
-    }
-    if (_viewHideInterval) {
-        clearInterval(_viewHideInterval);
-        _viewHideInterval = undefined;
-    }
-    var hidePanel = document.getElementById(ELEMENT_ID_HIDE_PANEL);
-    if (!hidePanel || hidePanel.style.display === "none") {
-        return;
-    }
-    if (hidePanel) {
-        hidePanel.style.display = "none";
-    }
-};
-var hideWebView = function () {
-    if (window) {
-        return;
-    }
-    var hidePanel = document.getElementById(ELEMENT_ID_HIDE_PANEL);
-    if (hidePanel && hidePanel.style.display !== "block") {
-        hidePanel.style.display = "block";
-        _viewHideInterval = setInterval(function () {
-            console.log("unhideWebView FORCED");
-            unhideWebView();
-        }, 5000);
-    }
-};
 function handleLink_(href) {
     if (drawer.open) {
         drawer.open = false;

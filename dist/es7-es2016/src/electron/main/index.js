@@ -37,7 +37,7 @@ const store_electron_1 = require("../common/store-electron");
 const lcp_3 = require("./lcp");
 const lsd_1 = require("./lsd");
 const lsd_deviceid_manager_1 = require("./lsd-deviceid-manager");
-const SECURE = false;
+const SECURE = true;
 const electronStoreLSD = new store_electron_1.StoreElectron("readium2-testapp-lsd", {});
 const deviceIDManager = lsd_deviceid_manager_1.getDeviceIDManager(electronStoreLSD, "Readium2 Electron desktop app");
 init_globals_1.initGlobalConverters_OPDS();
@@ -408,23 +408,7 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
     });
 }
 sessions_2.initSessions();
-function isFixedLayout(publication, link) {
-    if (link && link.Properties) {
-        if (link.Properties.Layout === "fixed") {
-            return true;
-        }
-        if (typeof link.Properties.Layout !== "undefined") {
-            return false;
-        }
-    }
-    if (publication &&
-        publication.Metadata &&
-        publication.Metadata.Rendition) {
-        return publication.Metadata.Rendition.Layout === "fixed";
-    }
-    return false;
-}
-const readiumCssDefaultsJson = readium_css_settings_1.readiumCSSDefaults;
+const readiumCssDefaultsJson = Object.assign({}, readium_css_settings_1.readiumCSSDefaults);
 const readiumCssKeys = Object.keys(readium_css_settings_1.readiumCSSDefaults);
 readiumCssKeys.forEach((key) => {
     const value = readium_css_settings_1.readiumCSSDefaults[key];
@@ -440,11 +424,7 @@ const electronStore = new store_electron_1.StoreElectron("readium2-testapp", {
     readiumCSS: readiumCssDefaultsJson,
     readiumCSSEnable: false,
 });
-function __computeReadiumCssJsonMessage(publication, link) {
-    if (isFixedLayout(publication, link)) {
-        return { setCSS: undefined, isFixedLayout: true };
-    }
-    const pubServerRoot = _publicationsServer.serverUrl();
+function __computeReadiumCssJsonMessage(_publication, _link) {
     const on = electronStore.get("readiumCSSEnable");
     if (on) {
         let cssJson = electronStore.get("readiumCSS");
@@ -453,7 +433,6 @@ function __computeReadiumCssJsonMessage(publication, link) {
         }
         const jsonMsg = {
             setCSS: cssJson,
-            urlRoot: pubServerRoot,
         };
         return jsonMsg;
     }
@@ -762,7 +741,7 @@ function openFile(filePath) {
             if (isManifestJSON(filePath)) {
                 _publicationsFilePaths.push(filePath);
                 debug(_publicationsFilePaths);
-                _publicationsUrls.push(decodeURIComponent(filePath));
+                _publicationsUrls.push(filePath);
                 debug(_publicationsUrls);
                 n = _publicationsFilePaths.length - 1;
             }

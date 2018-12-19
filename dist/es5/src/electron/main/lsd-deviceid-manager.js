@@ -53,18 +53,32 @@ function getDeviceIDManager(electronStoreLSD, name) {
         },
         recordDeviceID: function (key) {
             return tslib_1.__awaiter(this, void 0, void 0, function () {
-                var id, lsdStore, entry;
+                var id, err_1, lsdStore, entry;
                 return tslib_1.__generator(this, function (_a) {
-                    id = this.getDeviceID();
-                    lsdStore = electronStoreLSD.get("lsd");
-                    if (!lsdStore) {
-                        debug("LSD store problem?!");
-                        return [2, Promise.reject("Cannot get LSD store?")];
+                    switch (_a.label) {
+                        case 0:
+                            _a.trys.push([0, 2, , 3]);
+                            return [4, this.getDeviceID()];
+                        case 1:
+                            id = _a.sent();
+                            return [3, 3];
+                        case 2:
+                            err_1 = _a.sent();
+                            debug(err_1);
+                            return [3, 3];
+                        case 3:
+                            if (id) {
+                                lsdStore = electronStoreLSD.get("lsd");
+                                if (!lsdStore) {
+                                    debug("LSD store problem?!");
+                                    return [2, Promise.reject("Cannot get LSD store?")];
+                                }
+                                entry = LSD_STORE_DEVICEID_ENTRY_PREFIX + key;
+                                lsdStore[entry] = id;
+                                electronStoreLSD.set("lsd", lsdStore);
+                            }
+                            return [2, Promise.resolve()];
                     }
-                    entry = LSD_STORE_DEVICEID_ENTRY_PREFIX + key;
-                    lsdStore[entry] = id;
-                    electronStoreLSD.set("lsd", lsdStore);
-                    return [2, Promise.resolve()];
                 });
             });
         },

@@ -45,15 +45,23 @@ function getDeviceIDManager(electronStoreLSD, name) {
         },
         recordDeviceID(key) {
             return tslib_1.__awaiter(this, void 0, void 0, function* () {
-                const id = this.getDeviceID();
-                const lsdStore = electronStoreLSD.get("lsd");
-                if (!lsdStore) {
-                    debug("LSD store problem?!");
-                    return Promise.reject("Cannot get LSD store?");
+                let id;
+                try {
+                    id = yield this.getDeviceID();
                 }
-                const entry = LSD_STORE_DEVICEID_ENTRY_PREFIX + key;
-                lsdStore[entry] = id;
-                electronStoreLSD.set("lsd", lsdStore);
+                catch (err) {
+                    debug(err);
+                }
+                if (id) {
+                    const lsdStore = electronStoreLSD.get("lsd");
+                    if (!lsdStore) {
+                        debug("LSD store problem?!");
+                        return Promise.reject("Cannot get LSD store?");
+                    }
+                    const entry = LSD_STORE_DEVICEID_ENTRY_PREFIX + key;
+                    lsdStore[entry] = id;
+                    electronStoreLSD.set("lsd", lsdStore);
+                }
                 return Promise.resolve();
             });
         },

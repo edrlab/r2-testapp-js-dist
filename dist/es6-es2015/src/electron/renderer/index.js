@@ -5,7 +5,6 @@ const path = require("path");
 const readium_css_settings_1 = require("r2-navigator-js/dist/es6-es2015/src/electron/common/readium-css-settings");
 const sessions_1 = require("r2-navigator-js/dist/es6-es2015/src/electron/common/sessions");
 const querystring_1 = require("r2-navigator-js/dist/es6-es2015/src/electron/renderer/common/querystring");
-const console_redirect_1 = require("r2-navigator-js/dist/es6-es2015/src/electron/renderer/console-redirect");
 const index_1 = require("r2-navigator-js/dist/es6-es2015/src/electron/renderer/index");
 const init_globals_1 = require("r2-opds-js/dist/es6-es2015/src/opds/init-globals");
 const init_globals_2 = require("r2-shared-js/dist/es6-es2015/src/init-globals");
@@ -20,7 +19,6 @@ const index_3 = require("./riots/linklistgroup/index_");
 const index_4 = require("./riots/linktree/index_");
 const index_5 = require("./riots/menuselect/index_");
 const SystemFonts = require("system-font-families");
-console_redirect_1.consoleRedirect("r2:testapp#electron/renderer/index", process.stdout, process.stderr, true);
 const IS_DEV = (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev");
 const queryParams = querystring_1.getURLQueryParams();
 electron_1.webFrame.registerURLSchemeAsSecure(sessions_1.READIUM2_ELECTRON_HTTP_PROTOCOL);
@@ -74,10 +72,7 @@ const computeReadiumCssJsonMessage = () => {
     }
 };
 index_1.setReadiumCssJsonGetter(computeReadiumCssJsonMessage);
-const getEpubReadingSystem = () => {
-    return { name: "Readium2 test app", version: "0.0.1-alpha.1" };
-};
-index_1.setEpubReadingSystemJsonGetter(getEpubReadingSystem);
+index_1.setEpubReadingSystemInfo({ name: "Readium2 test app", version: "0.0.1-alpha.1" });
 const saveReadingLocation = (location) => {
     let obj = electronStore.get("readingLocation");
     if (!obj) {
@@ -112,7 +107,7 @@ electronStore.onChanged("readiumCSS.colCount", (newValue, oldValue) => {
         return;
     }
     console.log("readiumCSS.colCount: ", oldValue, " => ", newValue);
-    readiumCssOnOff();
+    refreshReadiumCSS();
 });
 electronStore.onChanged("readiumCSS.night", (newValue, oldValue) => {
     if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
@@ -121,7 +116,7 @@ electronStore.onChanged("readiumCSS.night", (newValue, oldValue) => {
     const nightSwitchEl = document.getElementById("night_switch");
     const nightSwitch = nightSwitchEl.mdcSwitch;
     nightSwitch.checked = newValue;
-    readiumCssOnOff();
+    refreshReadiumCSS();
 });
 electronStore.onChanged("readiumCSS.textAlign", (newValue, oldValue) => {
     if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
@@ -130,7 +125,7 @@ electronStore.onChanged("readiumCSS.textAlign", (newValue, oldValue) => {
     const justifySwitchEl = document.getElementById("justify_switch");
     const justifySwitch = justifySwitchEl.mdcSwitch;
     justifySwitch.checked = (newValue === "justify");
-    readiumCssOnOff();
+    refreshReadiumCSS();
 });
 electronStore.onChanged("readiumCSS.paged", (newValue, oldValue) => {
     if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
@@ -139,9 +134,9 @@ electronStore.onChanged("readiumCSS.paged", (newValue, oldValue) => {
     const paginateSwitchEl = document.getElementById("paginate_switch");
     const paginateSwitch = paginateSwitchEl.mdcSwitch;
     paginateSwitch.checked = newValue;
-    readiumCssOnOff();
+    refreshReadiumCSS();
 });
-const readiumCssOnOff = debounce_1.debounce(() => {
+const refreshReadiumCSS = debounce_1.debounce(() => {
     index_1.readiumCssOnOff();
 }, 500);
 function ensureSliderLayout() {
@@ -164,7 +159,7 @@ electronStore.onChanged("readiumCSSEnable", (newValue, oldValue) => {
     const readiumcssSwitchEl = document.getElementById("readiumcss_switch");
     const readiumcssSwitch = readiumcssSwitchEl.mdcSwitch;
     readiumcssSwitch.checked = newValue;
-    readiumCssOnOff();
+    refreshReadiumCSS();
     const justifySwitchEl = document.getElementById("justify_switch");
     const justifySwitch = justifySwitchEl.mdcSwitch;
     justifySwitch.disabled = !newValue;
@@ -343,7 +338,7 @@ const initLineHeightSelector = () => {
             return;
         }
         slider.value = parseFloat(newValue) * 100;
-        readiumCssOnOff();
+        refreshReadiumCSS();
     });
 };
 const initFontSizeSelector = () => {
@@ -372,7 +367,7 @@ const initFontSizeSelector = () => {
             return;
         }
         slider.value = parseInt(newValue.replace("%", ""), 10);
-        readiumCssOnOff();
+        refreshReadiumCSS();
     });
 };
 const initFontSelector = () => {
@@ -440,7 +435,7 @@ const initFontSelector = () => {
             return;
         }
         tag.setSelectedItem(ID_PREFIX + newValue);
-        readiumCssOnOff();
+        refreshReadiumCSS();
     });
     electronStore.onChanged("readiumCSSEnable", (newValue, oldValue) => {
         if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
@@ -926,47 +921,10 @@ function startNavigatorExperiment() {
                 console.log("!rootHtmlElement ???");
                 return;
             }
-            rootHtmlElement.addEventListener(index_1.DOM_EVENT_HIDE_VIEWPORT, () => {
-                hideWebView();
-            });
-            rootHtmlElement.addEventListener(index_1.DOM_EVENT_SHOW_VIEWPORT, () => {
-                unhideWebView();
-            });
             index_1.installNavigatorDOM(_publication, publicationJsonUrl, rootHtmlElementID, preloadPath, location);
         }, 500);
     }))();
 }
-const ELEMENT_ID_HIDE_PANEL = "r2_navigator_reader_chrome_HIDE";
-let _viewHideInterval;
-const unhideWebView = () => {
-    if (window) {
-        return;
-    }
-    if (_viewHideInterval) {
-        clearInterval(_viewHideInterval);
-        _viewHideInterval = undefined;
-    }
-    const hidePanel = document.getElementById(ELEMENT_ID_HIDE_PANEL);
-    if (!hidePanel || hidePanel.style.display === "none") {
-        return;
-    }
-    if (hidePanel) {
-        hidePanel.style.display = "none";
-    }
-};
-const hideWebView = () => {
-    if (window) {
-        return;
-    }
-    const hidePanel = document.getElementById(ELEMENT_ID_HIDE_PANEL);
-    if (hidePanel && hidePanel.style.display !== "block") {
-        hidePanel.style.display = "block";
-        _viewHideInterval = setInterval(() => {
-            console.log("unhideWebView FORCED");
-            unhideWebView();
-        }, 5000);
-    }
-};
 function handleLink_(href) {
     if (drawer.open) {
         drawer.open = false;
