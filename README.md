@@ -21,8 +21,6 @@ https://github.com/readium/r2-testapp-js
 
 There is no [github.io](https://readium.github.io/r2-testapp-js) site for this project (no [gh-pages](https://github.com/readium/r2-testapp-js/tree/gh-pages) branch).
 
-Wiki documentation is not used, instead there are Markdown files inside the repository ([docs](https://github.com/readium/r2-testapp-js/tree/develop/docs) folder).
-
 ## NPM package
 
 https://www.npmjs.com/package/r2-testapp-js
@@ -98,4 +96,16 @@ Command line steps (NPM, but similar with YARN):
 
 ## Documentation
 
-See the [index](/docs/index.md).
+See:
+
+https://github.com/readium/r2-navigator-js/blob/develop/README.md#documentation
+
+https://github.com/readium/r2-streamer-js/blob/develop/README.md#documentation
+
+https://github.com/readium/r2-opds-js/blob/develop/README.md#documentation
+
+https://github.com/readium/r2-shared-js/blob/develop/README.md#documentation
+
+https://github.com/readium/r2-lcp-js/blob/develop/README.md#documentation
+
+https://github.com/readium/r2-utils-js/blob/develop/README.md#documentation

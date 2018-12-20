@@ -1,10 +1,10 @@
 {
-  "node": "8.14.0",
-  "npm": "6.5.0",
-  "short": "6155b25",
-  "long": "6155b2566a1d6bcd9894a48bd5728c431f42e473",
+  "node": "8.14.1",
+  "npm": "6.4.1",
+  "short": "27443f9",
+  "long": "27443f9060265ba0c7de13a6639da7fb42f6e612",
   "branch": "develop",
-  "date": "2018-12-19T20:43:32.000Z",
-  "urlHistory": "https://github.com/readium/r2-testapp-js/commits/6155b2566a1d6bcd9894a48bd5728c431f42e473",
-  "urlDiff": "https://github.com/readium/r2-testapp-js/compare/6155b2566a1d6bcd9894a48bd5728c431f42e473...develop"
+  "date": "2018-12-20T14:12:44.000Z",
+  "urlHistory": "https://github.com/readium/r2-testapp-js/commits/27443f9060265ba0c7de13a6639da7fb42f6e612",
+  "urlDiff": "https://github.com/readium/r2-testapp-js/compare/27443f9060265ba0c7de13a6639da7fb42f6e612...develop"
 }
