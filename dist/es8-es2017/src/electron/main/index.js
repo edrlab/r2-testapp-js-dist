@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = require("fs");
+const http = require("http");
+const https = require("https");
 const path = require("path");
 const url_1 = require("url");
 const status_document_processing_1 = require("r2-lcp-js/dist/es8-es2017/src/lsd/status-document-processing");
@@ -67,17 +69,50 @@ else {
 let _lastBookPath;
 function openAllDevTools() {
     for (const wc of electron_1.webContents.getAllWebContents()) {
-        wc.openDevTools();
+        wc.openDevTools({ mode: "detach" });
     }
 }
 electron_1.ipcMain.on(events_1.R2_EVENT_DEVTOOLS, (_event, _arg) => {
     openAllDevTools();
 });
-function isManifestJSON(urlOrPath) {
+async function isManifestJSON(urlOrPath) {
     let p = urlOrPath;
-    if (UrlUtils_2.isHTTP(urlOrPath)) {
+    if (UrlUtils_1.isHTTP(urlOrPath)) {
         const url = new url_1.URL(urlOrPath);
         p = url.pathname;
+        const promise = new Promise((resolve, reject) => {
+            const isHTTPS = urlOrPath.startsWith("https://");
+            const options = {
+                host: url.host,
+                method: "HEAD",
+                path: urlOrPath.substr(urlOrPath.indexOf(url.pathname)),
+            };
+            debug(options);
+            (isHTTPS ? https : http).request(options, (response) => {
+                debug(response.statusCode);
+                if (response.statusCode && (response.statusCode < 200 || response.statusCode >= 300)) {
+                    reject("STATUS: " + response.statusCode);
+                    return;
+                }
+                debug(response.headers);
+                debug(response.headers["content-type"]);
+                const okay = response.headers["content-type"] &&
+                    (response.headers["content-type"].indexOf("application/webpub+json") >= 0 ||
+                        response.headers["content-type"].indexOf("application/audiobook+json") >= 0);
+                resolve(okay);
+            }).on("error", (err) => {
+                reject(err);
+            }).end();
+        });
+        let ok;
+        try {
+            ok = await promise;
+            debug("########### IS MANIFEST (HTTP): " + ok);
+            return ok;
+        }
+        catch (err) {
+            debug(err);
+        }
     }
     const isMan = /.*manifest\.json[\?]?.*/.test(p);
     debug("########### IS MANIFEST: " + isMan);
@@ -87,7 +122,10 @@ async function createElectronBrowserWindow(publicationFilePath, publicationUrl) 
     debug("createElectronBrowserWindow() " + publicationFilePath + " : " + publicationUrl);
     let lcpHint;
     let publication;
-    if (isManifestJSON(publicationFilePath)) {
+    const isWebPub = await isManifestJSON(publicationFilePath);
+    const isHttpWebPub = isWebPub && UrlUtils_1.isHTTP(publicationFilePath);
+    let isHttpWebPubWithoutLCP = isHttpWebPub;
+    if (isWebPub) {
         const failure = async (err) => {
             debug(err);
         };
@@ -129,7 +167,7 @@ async function createElectronBrowserWindow(publicationFilePath, publicationUrl) 
         const handleManifestJson = async (responseStr) => {
             const manifestJson = global.JSON.parse(responseStr);
             debug(manifestJson);
-            if (UrlUtils_2.isHTTP(publicationFilePath)) {
+            if (UrlUtils_1.isHTTP(publicationFilePath)) {
                 const arrLinks = [];
                 if (manifestJson.readingOrder) {
                     arrLinks.push(...manifestJson.readingOrder);
@@ -167,24 +205,31 @@ async function createElectronBrowserWindow(publicationFilePath, publicationUrl) 
                 return;
             }
             debug(publication);
+            const licenseLink = publication.Links ? publication.Links.find((link) => {
+                return link.Rel.indexOf("license") >= 0 &&
+                    link.TypeLink === "application/vnd.readium.lcp.license.v1.0+json";
+            }) : undefined;
+            isHttpWebPubWithoutLCP = isHttpWebPub && !licenseLink;
             let p = publicationFilePath;
-            if (UrlUtils_2.isHTTP(publicationFilePath)) {
+            if (UrlUtils_1.isHTTP(publicationFilePath)) {
                 const url = new url_1.URL(publicationFilePath);
                 p = url.pathname;
             }
             publication.AddToInternal("filename", path.basename(p));
             publication.AddToInternal("type", "epub");
-            if (!UrlUtils_2.isHTTP(publicationFilePath)) {
-                const dirPath = path.dirname(publicationFilePath);
-                const zip = await zip_ex_1.ZipExploded.loadPromise(dirPath);
-                publication.AddToInternal("zip", zip);
-            }
-            else {
-                const url = new url_1.URL(publicationFilePath);
-                const dirPath = path.dirname(p);
-                url.pathname = dirPath + "/";
-                const zip = await zip_ex_http_1.ZipExplodedHTTP.loadPromise(url.toString());
-                publication.AddToInternal("zip", zip);
+            if (!isHttpWebPubWithoutLCP) {
+                if (!UrlUtils_1.isHTTP(publicationFilePath)) {
+                    const dirPath = path.dirname(publicationFilePath);
+                    const zip = await zip_ex_1.ZipExploded.loadPromise(dirPath);
+                    publication.AddToInternal("zip", zip);
+                }
+                else {
+                    const url = new url_1.URL(publicationFilePath);
+                    const dirPath = path.dirname(p);
+                    url.pathname = dirPath + "/";
+                    const zip = await zip_ex_http_1.ZipExplodedHTTP.loadPromise(url.toString());
+                    publication.AddToInternal("zip", zip);
+                }
             }
             const pathDecoded = publicationFilePath;
             debug("ADDED HTTP pub to server cache: " + pathDecoded + " --- " + publicationFilePath);
@@ -194,72 +239,73 @@ async function createElectronBrowserWindow(publicationFilePath, publicationUrl) 
             if (!pubCheck) {
                 debug("PUB CHECK FAIL?");
             }
-            publicationUrl = `${_publicationsServer.serverUrl()}${publicationUrls[0]}`;
+            if (!isHttpWebPubWithoutLCP) {
+                publicationUrl = `${_publicationsServer.serverUrl()}${publicationUrls[0]}`;
+            }
             debug(publicationUrl);
-            if (publication.Links) {
-                const licenseLink = publication.Links.find((link) => {
-                    return link.Rel.indexOf("license") >= 0 &&
-                        link.TypeLink === "application/vnd.readium.lcp.license.v1.0+json";
-                });
-                if (licenseLink && licenseLink.Href) {
-                    let lcplHref = licenseLink.Href;
-                    if (!UrlUtils_2.isHTTP(lcplHref)) {
+            if (licenseLink && licenseLink.Href) {
+                let lcplHref = licenseLink.Href;
+                if (!UrlUtils_1.isHTTP(lcplHref)) {
+                    if (UrlUtils_1.isHTTP(publicationFilePath)) {
+                        lcplHref = new url_1.URL(lcplHref, publicationFilePath).toString();
+                    }
+                    else {
                         lcplHref = publicationFilePath.replace("manifest.json", licenseLink.Href);
                     }
-                    debug(lcplHref);
-                    if (UrlUtils_2.isHTTP(lcplHref)) {
-                        if (needsStreamingResponse) {
-                            const promise = new Promise((resolve, reject) => {
-                                request.get({
-                                    headers: {},
-                                    method: "GET",
-                                    uri: lcplHref,
-                                })
-                                    .on("response", async (responsez) => {
-                                    await successLCP(responsez, publication);
-                                    resolve();
-                                })
-                                    .on("error", async (err) => {
-                                    await failure(err);
-                                    reject();
-                                });
-                            });
-                            try {
-                                await promise;
-                            }
-                            catch (err) {
-                                return;
-                            }
-                        }
-                        else {
-                            let responsez;
-                            try {
-                                responsez = await requestPromise({
-                                    headers: {},
-                                    method: "GET",
-                                    resolveWithFullResponse: true,
-                                    uri: lcplHref,
-                                });
-                            }
-                            catch (err) {
+                }
+                debug(lcplHref);
+                if (UrlUtils_1.isHTTP(lcplHref)) {
+                    if (needsStreamingResponse) {
+                        const promise = new Promise((resolve, reject) => {
+                            request.get({
+                                headers: {},
+                                method: "GET",
+                                uri: lcplHref,
+                            })
+                                .on("response", async (responsez) => {
+                                await successLCP(responsez, publication);
+                                resolve();
+                            })
+                                .on("error", async (err) => {
                                 await failure(err);
-                                return;
-                            }
-                            await successLCP(responsez, publication);
+                                reject();
+                            });
+                        });
+                        try {
+                            await promise;
+                        }
+                        catch (err) {
+                            return;
                         }
                     }
                     else {
-                        const responsezStr = fs.readFileSync(lcplHref, { encoding: "utf8" });
-                        if (!responsezStr) {
-                            await failure("Cannot read local file: " + lcplHref);
+                        let responsez;
+                        try {
+                            responsez = await requestPromise({
+                                headers: {},
+                                method: "GET",
+                                resolveWithFullResponse: true,
+                                uri: lcplHref,
+                            });
+                        }
+                        catch (err) {
+                            await failure(err);
                             return;
                         }
-                        handleLCP(responsezStr, publication);
+                        await successLCP(responsez, publication);
                     }
+                }
+                else {
+                    const responsezStr = fs.readFileSync(lcplHref, { encoding: "utf8" });
+                    if (!responsezStr) {
+                        await failure("Cannot read local file: " + lcplHref);
+                        return;
+                    }
+                    handleLCP(responsezStr, publication);
                 }
             }
         };
-        if (UrlUtils_2.isHTTP(publicationFilePath)) {
+        if (UrlUtils_1.isHTTP(publicationFilePath)) {
             const success = async (response) => {
                 if (response.statusCode && (response.statusCode < 200 || response.statusCode >= 300)) {
                     await failure("HTTP CODE " + response.statusCode);
@@ -389,18 +435,21 @@ async function createElectronBrowserWindow(publicationFilePath, publicationUrl) 
     electronBrowserWindow.webContents.on("dom-ready", () => {
         debug("electronBrowserWindow dom-ready " + publicationFilePath + " : " + publicationUrl);
     });
-    if (SECURE && UrlUtils_2.isHTTP(publicationUrl)) {
+    if (!isHttpWebPubWithoutLCP && SECURE && UrlUtils_1.isHTTP(publicationUrl)) {
         publicationUrl = sessions_1.convertHttpUrlToCustomScheme(publicationUrl);
     }
-    const urlEncoded = UrlUtils_1.encodeURIComponent_RFC3986(publicationUrl);
+    const urlEncoded = UrlUtils_2.encodeURIComponent_RFC3986(publicationUrl);
     let htmlPath = IS_DEV ? `${__dirname}/../renderer/index.html` : `${__dirname}/index.html`;
     htmlPath = htmlPath.replace(/\\/g, "/");
     let fullUrl = `file://${htmlPath}?pub=${urlEncoded}`;
     if (lcpHint) {
-        fullUrl = fullUrl + "&lcpHint=" + UrlUtils_1.encodeURIComponent_RFC3986(lcpHint);
+        fullUrl = fullUrl + "&lcpHint=" + UrlUtils_2.encodeURIComponent_RFC3986(lcpHint);
     }
     const urlRoot = _publicationsServer.serverUrl();
-    fullUrl = fullUrl + "&pubServerRoot=" + UrlUtils_1.encodeURIComponent_RFC3986(urlRoot);
+    fullUrl = fullUrl + "&pubServerRoot=" + UrlUtils_2.encodeURIComponent_RFC3986(urlRoot);
+    if (isHttpWebPubWithoutLCP) {
+        fullUrl = fullUrl + "&isHttpWebPubWithoutLCP=1";
+    }
     debug(fullUrl);
     electronBrowserWindow.webContents.loadURL(fullUrl, { extraHeaders: "pragma: no-cache\n" });
 }
@@ -525,7 +574,7 @@ electron_1.app.on("ready", () => {
                 const argPath = args[0].trim();
                 let filePath = argPath;
                 debug(filePath);
-                if (UrlUtils_2.isHTTP(filePath)) {
+                if (UrlUtils_1.isHTTP(filePath)) {
                     await openFile(filePath);
                     return;
                 }
@@ -555,7 +604,7 @@ electron_1.app.on("ready", () => {
                 }
             }
             if (filePathToLoadOnLaunch) {
-                if (epub_1.isEPUBlication(filePathToLoadOnLaunch) || isManifestJSON(filePathToLoadOnLaunch)) {
+                if (epub_1.isEPUBlication(filePathToLoadOnLaunch) || await isManifestJSON(filePathToLoadOnLaunch)) {
                     await openFile(filePathToLoadOnLaunch);
                     return;
                 }
@@ -732,7 +781,7 @@ async function openFileDownload(filePath) {
 async function openFile(filePath) {
     let n = _publicationsFilePaths.indexOf(filePath);
     if (n < 0) {
-        if (isManifestJSON(filePath)) {
+        if (await isManifestJSON(filePath)) {
             _publicationsFilePaths.push(filePath);
             debug(_publicationsFilePaths);
             _publicationsUrls.push(filePath);

@@ -12,6 +12,7 @@ const publication_1 = require("r2-shared-js/dist/es6-es2015/src/models/publicati
 const debounce_1 = require("debounce");
 const electron_1 = require("electron");
 const ta_json_x_1 = require("ta-json-x");
+const throttle = require("throttleit");
 const events_1 = require("../common/events");
 const store_electron_1 = require("../common/store-electron");
 const index_2 = require("./riots/linklist/index_");
@@ -21,14 +22,6 @@ const index_5 = require("./riots/menuselect/index_");
 const SystemFonts = require("system-font-families");
 const IS_DEV = (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev");
 const queryParams = querystring_1.getURLQueryParams();
-electron_1.webFrame.registerURLSchemeAsSecure(sessions_1.READIUM2_ELECTRON_HTTP_PROTOCOL);
-electron_1.webFrame.registerURLSchemeAsPrivileged(sessions_1.READIUM2_ELECTRON_HTTP_PROTOCOL, {
-    allowServiceWorkers: false,
-    bypassCSP: false,
-    corsEnabled: false,
-    secure: true,
-    supportFetchAPI: true,
-});
 const readiumCssDefaultsJson = readium_css_settings_1.readiumCSSDefaults;
 const readiumCssKeys = Object.keys(readium_css_settings_1.readiumCSSDefaults);
 readiumCssKeys.forEach((key) => {
@@ -94,11 +87,19 @@ console.log(publicationJsonUrl);
 const publicationJsonUrl_ = publicationJsonUrl.startsWith(sessions_1.READIUM2_ELECTRON_HTTP_PROTOCOL) ?
     sessions_1.convertCustomSchemeToHttpUrl(publicationJsonUrl) : publicationJsonUrl;
 console.log(publicationJsonUrl_);
-const pathBase64 = publicationJsonUrl_.
-    replace(/.*\/pub\/(.*)\/manifest.json.*/, "$1");
-console.log(pathBase64);
-const pathDecoded = new Buffer(decodeURIComponent(pathBase64), "base64").toString("utf8");
-console.log(pathDecoded);
+const isHttpWebPubWithoutLCP = queryParams["isHttpWebPub"];
+console.log(isHttpWebPubWithoutLCP);
+let pathDecoded = "";
+if (isHttpWebPubWithoutLCP) {
+    pathDecoded = publicationJsonUrl;
+}
+else {
+    const pathBase64 = publicationJsonUrl_.
+        replace(/.*\/pub\/(.*)\/manifest.json.*/, "$1");
+    console.log(pathBase64);
+    pathDecoded = new Buffer(decodeURIComponent(pathBase64), "base64").toString("utf8");
+    console.log(pathDecoded);
+}
 const pathFileName = pathDecoded.substr(pathDecoded.replace(/\\/g, "/").lastIndexOf("/") + 1, pathDecoded.length - 1);
 console.log(pathFileName);
 const lcpHint = queryParams["lcpHint"];
@@ -125,6 +126,15 @@ electronStore.onChanged("readiumCSS.textAlign", (newValue, oldValue) => {
     const justifySwitchEl = document.getElementById("justify_switch");
     const justifySwitch = justifySwitchEl.mdcSwitch;
     justifySwitch.checked = (newValue === "justify");
+    refreshReadiumCSS();
+});
+electronStore.onChanged("readiumCSS.noFootnotes", (newValue, oldValue) => {
+    if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
+        return;
+    }
+    const footnotesSwitchEl = document.getElementById("footnotes_switch");
+    const footnotesSwitch = footnotesSwitchEl.mdcSwitch;
+    footnotesSwitch.checked = newValue ? false : true;
     refreshReadiumCSS();
 });
 electronStore.onChanged("readiumCSS.paged", (newValue, oldValue) => {
@@ -163,6 +173,9 @@ electronStore.onChanged("readiumCSSEnable", (newValue, oldValue) => {
     const justifySwitchEl = document.getElementById("justify_switch");
     const justifySwitch = justifySwitchEl.mdcSwitch;
     justifySwitch.disabled = !newValue;
+    const footnotesSwitchEl = document.getElementById("footnotes_switch");
+    const footnotesSwitch = footnotesSwitchEl.mdcSwitch;
+    footnotesSwitch.disabled = !newValue;
     const paginateSwitchEl = document.getElementById("paginate_switch");
     const paginateSwitch = paginateSwitchEl.mdcSwitch;
     paginateSwitch.disabled = !newValue;
@@ -525,6 +538,15 @@ window.addEventListener("DOMContentLoaded", () => {
         electronStore.set("readiumCSS.textAlign", checked ? "justify" : "initial");
     });
     justifySwitch.disabled = !electronStore.get("readiumCSSEnable");
+    const footnotesSwitchEl = document.getElementById("footnotes_switch");
+    const footnotesSwitch = new window.mdc.switchControl.MDCSwitch(footnotesSwitchEl);
+    footnotesSwitchEl.mdcSwitch = footnotesSwitch;
+    footnotesSwitch.checked = electronStore.get("readiumCSS.noFootnotes") ? false : true;
+    footnotesSwitchEl.addEventListener("change", (_event) => {
+        const checked = footnotesSwitch.checked;
+        electronStore.set("readiumCSS.noFootnotes", checked ? false : true);
+    });
+    footnotesSwitch.disabled = !electronStore.get("readiumCSSEnable");
     const paginateSwitchEl = document.getElementById("paginate_switch");
     const paginateSwitch = new window.mdc.switchControl.MDCSwitch(paginateSwitchEl);
     paginateSwitchEl.mdcSwitch = paginateSwitch;
@@ -738,10 +760,11 @@ function startNavigatorExperiment() {
     (() => tslib_1.__awaiter(this, void 0, void 0, function* () {
         let response;
         try {
-            response = yield fetch(publicationJsonUrl);
+            response = yield fetch(publicationJsonUrl_);
         }
         catch (e) {
             console.log(e);
+            console.log(publicationJsonUrl_);
             return;
         }
         if (!response.ok) {
@@ -772,6 +795,109 @@ function startNavigatorExperiment() {
             if (title) {
                 const h1 = document.getElementById("pubTitle");
                 h1.textContent = title;
+                h1.addEventListener("click", (_event) => {
+                    if (window.READIUM2 && window.READIUM2.debug) {
+                        window.READIUM2.debug(window.READIUM2.DEBUG_VISUALS ? false : true);
+                    }
+                });
+            }
+        }
+        const buttonttsPLAY = document.getElementById("ttsPLAY");
+        buttonttsPLAY.addEventListener("click", (_event) => {
+            index_1.ttsPlay();
+        });
+        const buttonttsPAUSE = document.getElementById("ttsPAUSE");
+        buttonttsPAUSE.addEventListener("click", (_event) => {
+            index_1.ttsPause();
+        });
+        const buttonttsSTOP = document.getElementById("ttsSTOP");
+        buttonttsSTOP.addEventListener("click", (_event) => {
+            index_1.ttsStop();
+        });
+        const buttonttsRESUME = document.getElementById("ttsRESUME");
+        buttonttsRESUME.addEventListener("click", (_event) => {
+            index_1.ttsResume();
+        });
+        const buttonttsNEXT = document.getElementById("ttsNEXT");
+        buttonttsNEXT.addEventListener("click", (_event) => {
+            index_1.ttsNext();
+        });
+        const buttonttsPREVIOUS = document.getElementById("ttsPREVIOUS");
+        buttonttsPREVIOUS.addEventListener("click", (_event) => {
+            index_1.ttsPrevious();
+        });
+        const buttonttsENABLE = document.getElementById("ttsENABLE");
+        buttonttsENABLE.addEventListener("click", (_event) => {
+            ttsEnableToggle();
+        });
+        const buttonttsDISABLE = document.getElementById("ttsDISABLE");
+        buttonttsDISABLE.addEventListener("click", (_event) => {
+            ttsEnableToggle();
+        });
+        let _ttsState;
+        refreshTtsUiState();
+        index_1.ttsListen((ttsState) => {
+            _ttsState = ttsState;
+            refreshTtsUiState();
+        });
+        function refreshTtsUiState() {
+            if (_ttsState === index_1.TTSStateEnum.PAUSED) {
+                buttonttsPLAY.style.display = "none";
+                buttonttsRESUME.style.display = "inline-block";
+                buttonttsPAUSE.style.display = "none";
+                buttonttsSTOP.style.display = "inline-block";
+                buttonttsPREVIOUS.style.display = "inline-block";
+                buttonttsNEXT.style.display = "inline-block";
+            }
+            else if (_ttsState === index_1.TTSStateEnum.STOPPED) {
+                buttonttsPLAY.style.display = "inline-block";
+                buttonttsRESUME.style.display = "none";
+                buttonttsPAUSE.style.display = "none";
+                buttonttsSTOP.style.display = "none";
+                buttonttsPREVIOUS.style.display = "none";
+                buttonttsNEXT.style.display = "none";
+            }
+            else if (_ttsState === index_1.TTSStateEnum.PLAYING) {
+                buttonttsPLAY.style.display = "none";
+                buttonttsRESUME.style.display = "none";
+                buttonttsPAUSE.style.display = "inline-block";
+                buttonttsSTOP.style.display = "inline-block";
+                buttonttsPREVIOUS.style.display = "inline-block";
+                buttonttsNEXT.style.display = "inline-block";
+            }
+            else {
+                buttonttsPLAY.style.display = "none";
+                buttonttsRESUME.style.display = "none";
+                buttonttsPAUSE.style.display = "none";
+                buttonttsSTOP.style.display = "none";
+                buttonttsPREVIOUS.style.display = "none";
+                buttonttsNEXT.style.display = "none";
+            }
+        }
+        buttonttsDISABLE.style.display = "none";
+        let _ttsEnabled = false;
+        function ttsEnableToggle() {
+            if (_ttsEnabled) {
+                buttonttsENABLE.style.display = "inline-block";
+                buttonttsDISABLE.style.display = "none";
+                index_1.ttsClickEnable(false);
+                index_1.ttsStop();
+                setTimeout(() => {
+                    _ttsEnabled = false;
+                    _ttsState = undefined;
+                    refreshTtsUiState();
+                }, 100);
+            }
+            else {
+                buttonttsENABLE.style.display = "none";
+                buttonttsDISABLE.style.display = "inline-block";
+                index_1.ttsClickEnable(true);
+                index_1.ttsStop();
+                setTimeout(() => {
+                    _ttsEnabled = true;
+                    _ttsState = index_1.TTSStateEnum.STOPPED;
+                    refreshTtsUiState();
+                }, 100);
             }
         }
         const buttonNavLeft = document.getElementById("buttonNavLeft");
@@ -782,6 +908,17 @@ function startNavigatorExperiment() {
         buttonNavRight.addEventListener("click", (_event) => {
             index_1.navLeftOrRight(false);
         });
+        const onWheel = throttle((ev) => {
+            console.log("wheel: " + ev.deltaX + " - " + ev.deltaY);
+            if (ev.deltaY < 0 || ev.deltaX < 0) {
+                index_1.navLeftOrRight(true);
+            }
+            else if (ev.deltaY > 0 || ev.deltaX > 0) {
+                index_1.navLeftOrRight(false);
+            }
+        }, 300);
+        buttonNavLeft.addEventListener("wheel", onWheel);
+        buttonNavRight.addEventListener("wheel", onWheel);
         if (_publication.Spine && _publication.Spine.length) {
             const opts = {
                 basic: true,
@@ -921,6 +1058,7 @@ function startNavigatorExperiment() {
                 console.log("!rootHtmlElement ???");
                 return;
             }
+            console.log(location);
             index_1.installNavigatorDOM(_publication, publicationJsonUrl, rootHtmlElementID, preloadPath, location);
         }, 500);
     }))();

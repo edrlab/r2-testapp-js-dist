@@ -3,6 +3,8 @@ var _this = this;
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = require("tslib");
 var fs = require("fs");
+var http = require("http");
+var https = require("https");
 var path = require("path");
 var url_1 = require("url");
 var status_document_processing_1 = require("r2-lcp-js/dist/es5/src/lsd/status-document-processing");
@@ -70,31 +72,81 @@ var _lastBookPath;
 function openAllDevTools() {
     for (var _i = 0, _a = electron_1.webContents.getAllWebContents(); _i < _a.length; _i++) {
         var wc = _a[_i];
-        wc.openDevTools();
+        wc.openDevTools({ mode: "detach" });
     }
 }
 electron_1.ipcMain.on(events_1.R2_EVENT_DEVTOOLS, function (_event, _arg) {
     openAllDevTools();
 });
 function isManifestJSON(urlOrPath) {
-    var p = urlOrPath;
-    if (UrlUtils_2.isHTTP(urlOrPath)) {
-        var url = new url_1.URL(urlOrPath);
-        p = url.pathname;
-    }
-    var isMan = /.*manifest\.json[\?]?.*/.test(p);
-    debug("########### IS MANIFEST: " + isMan);
-    return isMan;
+    return tslib_1.__awaiter(this, void 0, void 0, function () {
+        var p, url_2, promise, ok, err_1, isMan;
+        return tslib_1.__generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    p = urlOrPath;
+                    if (!UrlUtils_1.isHTTP(urlOrPath)) return [3, 4];
+                    url_2 = new url_1.URL(urlOrPath);
+                    p = url_2.pathname;
+                    promise = new Promise(function (resolve, reject) {
+                        var isHTTPS = urlOrPath.startsWith("https://");
+                        var options = {
+                            host: url_2.host,
+                            method: "HEAD",
+                            path: urlOrPath.substr(urlOrPath.indexOf(url_2.pathname)),
+                        };
+                        debug(options);
+                        (isHTTPS ? https : http).request(options, function (response) {
+                            debug(response.statusCode);
+                            if (response.statusCode && (response.statusCode < 200 || response.statusCode >= 300)) {
+                                reject("STATUS: " + response.statusCode);
+                                return;
+                            }
+                            debug(response.headers);
+                            debug(response.headers["content-type"]);
+                            var okay = response.headers["content-type"] &&
+                                (response.headers["content-type"].indexOf("application/webpub+json") >= 0 ||
+                                    response.headers["content-type"].indexOf("application/audiobook+json") >= 0);
+                            resolve(okay);
+                        }).on("error", function (err) {
+                            reject(err);
+                        }).end();
+                    });
+                    ok = void 0;
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    return [4, promise];
+                case 2:
+                    ok = _a.sent();
+                    debug("########### IS MANIFEST (HTTP): " + ok);
+                    return [2, ok];
+                case 3:
+                    err_1 = _a.sent();
+                    debug(err_1);
+                    return [3, 4];
+                case 4:
+                    isMan = /.*manifest\.json[\?]?.*/.test(p);
+                    debug("########### IS MANIFEST: " + isMan);
+                    return [2, isMan];
+            }
+        });
+    });
 }
 function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
     return tslib_1.__awaiter(this, void 0, void 0, function () {
-        var lcpHint, publication, failure_1, handleLCP_1, successLCP_1, needsStreamingResponse_1, handleManifestJson_1, success_1, promise, err_1, response, err_2, responseStr, err_3, err_4, electronBrowserWindow, urlEncoded, htmlPath, fullUrl, urlRoot;
+        var lcpHint, publication, isWebPub, isHttpWebPub, isHttpWebPubWithoutLCP, failure_1, handleLCP_1, successLCP_1, needsStreamingResponse_1, handleManifestJson_1, success_1, promise, err_2, response, err_3, responseStr, err_4, err_5, electronBrowserWindow, urlEncoded, htmlPath, fullUrl, urlRoot;
         var _this = this;
         return tslib_1.__generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     debug("createElectronBrowserWindow() " + publicationFilePath + " : " + publicationUrl);
-                    if (!isManifestJSON(publicationFilePath)) return [3, 18];
+                    return [4, isManifestJSON(publicationFilePath)];
+                case 1:
+                    isWebPub = _a.sent();
+                    isHttpWebPub = isWebPub && UrlUtils_1.isHTTP(publicationFilePath);
+                    isHttpWebPubWithoutLCP = isHttpWebPub;
+                    if (!isWebPub) return [3, 19];
                     failure_1 = function (err) { return tslib_1.__awaiter(_this, void 0, void 0, function () {
                         return tslib_1.__generator(this, function (_a) {
                             debug(err);
@@ -112,7 +164,7 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                         pub.LCP = lcpl;
                     };
                     successLCP_1 = function (response, pub) { return tslib_1.__awaiter(_this, void 0, void 0, function () {
-                        var responseStr, responseData, err_5;
+                        var responseStr, responseData, err_6;
                         return tslib_1.__generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0:
@@ -137,8 +189,8 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                                     responseData = _a.sent();
                                     return [3, 7];
                                 case 6:
-                                    err_5 = _a.sent();
-                                    debug(err_5);
+                                    err_6 = _a.sent();
+                                    debug(err_6);
                                     return [2];
                                 case 7:
                                     responseStr = responseData.toString("utf8");
@@ -151,14 +203,14 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                     }); };
                     needsStreamingResponse_1 = true;
                     handleManifestJson_1 = function (responseStr) { return tslib_1.__awaiter(_this, void 0, void 0, function () {
-                        var manifestJson, arrLinks, p, url, dirPath, zip, url, dirPath, zip, pathDecoded, publicationUrls, pubCheck, licenseLink, lcplHref_1, promise, err_6, responsez, err_7, responsezStr;
+                        var manifestJson, arrLinks, licenseLink, p, url, dirPath, zip, url, dirPath, zip, pathDecoded, publicationUrls, pubCheck, lcplHref_1, promise, err_7, responsez, err_8, responsezStr;
                         var _this = this;
                         return tslib_1.__generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0:
                                     manifestJson = global.JSON.parse(responseStr);
                                     debug(manifestJson);
-                                    if (UrlUtils_2.isHTTP(publicationFilePath)) {
+                                    if (UrlUtils_1.isHTTP(publicationFilePath)) {
                                         arrLinks = [];
                                         if (manifestJson.readingOrder) {
                                             arrLinks.push.apply(arrLinks, manifestJson.readingOrder);
@@ -196,14 +248,20 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                                         return [2];
                                     }
                                     debug(publication);
+                                    licenseLink = publication.Links ? publication.Links.find(function (link) {
+                                        return link.Rel.indexOf("license") >= 0 &&
+                                            link.TypeLink === "application/vnd.readium.lcp.license.v1.0+json";
+                                    }) : undefined;
+                                    isHttpWebPubWithoutLCP = isHttpWebPub && !licenseLink;
                                     p = publicationFilePath;
-                                    if (UrlUtils_2.isHTTP(publicationFilePath)) {
+                                    if (UrlUtils_1.isHTTP(publicationFilePath)) {
                                         url = new url_1.URL(publicationFilePath);
                                         p = url.pathname;
                                     }
                                     publication.AddToInternal("filename", path.basename(p));
                                     publication.AddToInternal("type", "epub");
-                                    if (!!UrlUtils_2.isHTTP(publicationFilePath)) return [3, 2];
+                                    if (!!isHttpWebPubWithoutLCP) return [3, 4];
+                                    if (!!UrlUtils_1.isHTTP(publicationFilePath)) return [3, 2];
                                     dirPath = path.dirname(publicationFilePath);
                                     return [4, zip_ex_1.ZipExploded.loadPromise(dirPath)];
                                 case 1:
@@ -228,20 +286,22 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                                     if (!pubCheck) {
                                         debug("PUB CHECK FAIL?");
                                     }
-                                    publicationUrl = "" + _publicationsServer.serverUrl() + publicationUrls[0];
+                                    if (!isHttpWebPubWithoutLCP) {
+                                        publicationUrl = "" + _publicationsServer.serverUrl() + publicationUrls[0];
+                                    }
                                     debug(publicationUrl);
-                                    if (!publication.Links) return [3, 20];
-                                    licenseLink = publication.Links.find(function (link) {
-                                        return link.Rel.indexOf("license") >= 0 &&
-                                            link.TypeLink === "application/vnd.readium.lcp.license.v1.0+json";
-                                    });
                                     if (!(licenseLink && licenseLink.Href)) return [3, 20];
                                     lcplHref_1 = licenseLink.Href;
-                                    if (!UrlUtils_2.isHTTP(lcplHref_1)) {
-                                        lcplHref_1 = publicationFilePath.replace("manifest.json", licenseLink.Href);
+                                    if (!UrlUtils_1.isHTTP(lcplHref_1)) {
+                                        if (UrlUtils_1.isHTTP(publicationFilePath)) {
+                                            lcplHref_1 = new url_1.URL(lcplHref_1, publicationFilePath).toString();
+                                        }
+                                        else {
+                                            lcplHref_1 = publicationFilePath.replace("manifest.json", licenseLink.Href);
+                                        }
                                     }
                                     debug(lcplHref_1);
-                                    if (!UrlUtils_2.isHTTP(lcplHref_1)) return [3, 17];
+                                    if (!UrlUtils_1.isHTTP(lcplHref_1)) return [3, 17];
                                     if (!needsStreamingResponse_1) return [3, 9];
                                     promise = new Promise(function (resolve, reject) {
                                         request.get({
@@ -280,7 +340,7 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                                     _a.sent();
                                     return [3, 8];
                                 case 7:
-                                    err_6 = _a.sent();
+                                    err_7 = _a.sent();
                                     return [2];
                                 case 8: return [3, 16];
                                 case 9:
@@ -298,8 +358,8 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                                     responsez = _a.sent();
                                     return [3, 14];
                                 case 12:
-                                    err_7 = _a.sent();
-                                    return [4, failure_1(err_7)];
+                                    err_8 = _a.sent();
+                                    return [4, failure_1(err_8)];
                                 case 13:
                                     _a.sent();
                                     return [2];
@@ -322,9 +382,9 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                             }
                         });
                     }); };
-                    if (!UrlUtils_2.isHTTP(publicationFilePath)) return [3, 13];
+                    if (!UrlUtils_1.isHTTP(publicationFilePath)) return [3, 14];
                     success_1 = function (response) { return tslib_1.__awaiter(_this, void 0, void 0, function () {
-                        var responseStr, responseData, err_8;
+                        var responseStr, responseData, err_9;
                         return tslib_1.__generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0:
@@ -349,8 +409,8 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                                     responseData = _a.sent();
                                     return [3, 7];
                                 case 6:
-                                    err_8 = _a.sent();
-                                    debug(err_8);
+                                    err_9 = _a.sent();
+                                    debug(err_9);
                                     return [2];
                                 case 7:
                                     responseStr = responseData.toString("utf8");
@@ -362,7 +422,7 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                             }
                         });
                     }); };
-                    if (!needsStreamingResponse_1) return [3, 5];
+                    if (!needsStreamingResponse_1) return [3, 6];
                     promise = new Promise(function (resolve, reject) {
                         request.get({
                             headers: {},
@@ -392,75 +452,75 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                             });
                         }); });
                     });
-                    _a.label = 1;
-                case 1:
-                    _a.trys.push([1, 3, , 4]);
-                    return [4, promise];
+                    _a.label = 2;
                 case 2:
-                    _a.sent();
-                    return [3, 4];
+                    _a.trys.push([2, 4, , 5]);
+                    return [4, promise];
                 case 3:
-                    err_1 = _a.sent();
+                    _a.sent();
+                    return [3, 5];
+                case 4:
+                    err_2 = _a.sent();
                     return [2];
-                case 4: return [3, 12];
-                case 5:
-                    response = void 0;
-                    _a.label = 6;
+                case 5: return [3, 13];
                 case 6:
-                    _a.trys.push([6, 8, , 10]);
+                    response = void 0;
+                    _a.label = 7;
+                case 7:
+                    _a.trys.push([7, 9, , 11]);
                     return [4, requestPromise({
                             headers: {},
                             method: "GET",
                             resolveWithFullResponse: true,
                             uri: publicationFilePath,
                         })];
-                case 7:
-                    response = _a.sent();
-                    return [3, 10];
                 case 8:
-                    err_2 = _a.sent();
-                    return [4, failure_1(err_2)];
+                    response = _a.sent();
+                    return [3, 11];
                 case 9:
-                    _a.sent();
-                    return [2];
-                case 10: return [4, success_1(response)];
-                case 11:
-                    _a.sent();
-                    _a.label = 12;
-                case 12: return [3, 17];
-                case 13:
-                    responseStr = fs.readFileSync(publicationFilePath, { encoding: "utf8" });
-                    if (!!responseStr) return [3, 15];
-                    return [4, failure_1("Cannot read local file: " + publicationFilePath)];
-                case 14:
-                    _a.sent();
-                    return [2];
-                case 15: return [4, handleManifestJson_1(responseStr)];
-                case 16:
-                    _a.sent();
-                    _a.label = 17;
-                case 17: return [3, 22];
-                case 18:
-                    if (!epub_1.isEPUBlication(publicationFilePath)) return [3, 22];
-                    _a.label = 19;
-                case 19:
-                    _a.trys.push([19, 21, , 22]);
-                    return [4, _publicationsServer.loadOrGetCachedPublication(publicationFilePath)];
-                case 20:
-                    publication = _a.sent();
-                    return [3, 22];
-                case 21:
                     err_3 = _a.sent();
-                    debug(err_3);
+                    return [4, failure_1(err_3)];
+                case 10:
+                    _a.sent();
                     return [2];
+                case 11: return [4, success_1(response)];
+                case 12:
+                    _a.sent();
+                    _a.label = 13;
+                case 13: return [3, 18];
+                case 14:
+                    responseStr = fs.readFileSync(publicationFilePath, { encoding: "utf8" });
+                    if (!!responseStr) return [3, 16];
+                    return [4, failure_1("Cannot read local file: " + publicationFilePath)];
+                case 15:
+                    _a.sent();
+                    return [2];
+                case 16: return [4, handleManifestJson_1(responseStr)];
+                case 17:
+                    _a.sent();
+                    _a.label = 18;
+                case 18: return [3, 23];
+                case 19:
+                    if (!epub_1.isEPUBlication(publicationFilePath)) return [3, 23];
+                    _a.label = 20;
+                case 20:
+                    _a.trys.push([20, 22, , 23]);
+                    return [4, _publicationsServer.loadOrGetCachedPublication(publicationFilePath)];
+                case 21:
+                    publication = _a.sent();
+                    return [3, 23];
                 case 22:
-                    if (!(publication && publication.LCP)) return [3, 27];
-                    debug(publication.LCP);
-                    _a.label = 23;
+                    err_4 = _a.sent();
+                    debug(err_4);
+                    return [2];
                 case 23:
-                    _a.trys.push([23, 25, , 26]);
+                    if (!(publication && publication.LCP)) return [3, 28];
+                    debug(publication.LCP);
+                    _a.label = 24;
+                case 24:
+                    _a.trys.push([24, 26, , 27]);
                     return [4, status_document_processing_1.launchStatusDocumentProcessing(publication.LCP, deviceIDManager, function (licenseUpdateJson) { return tslib_1.__awaiter(_this, void 0, void 0, function () {
-                            var res, err_9;
+                            var res, err_10;
                             return tslib_1.__generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
@@ -476,21 +536,21 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                                         debug("EPUB SAVED: " + res);
                                         return [3, 4];
                                     case 3:
-                                        err_9 = _a.sent();
-                                        debug(err_9);
+                                        err_10 = _a.sent();
+                                        debug(err_10);
                                         return [3, 4];
                                     case 4: return [2];
                                 }
                             });
                         }); })];
-                case 24:
-                    _a.sent();
-                    return [3, 26];
                 case 25:
-                    err_4 = _a.sent();
-                    debug(err_4);
-                    return [3, 26];
+                    _a.sent();
+                    return [3, 27];
                 case 26:
+                    err_5 = _a.sent();
+                    debug(err_5);
+                    return [3, 27];
+                case 27:
                     if (publication.LCP.Encryption &&
                         publication.LCP.Encryption.UserKey &&
                         publication.LCP.Encryption.UserKey.TextHint) {
@@ -499,8 +559,8 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                     if (!lcpHint) {
                         lcpHint = "LCP passphrase";
                     }
-                    _a.label = 27;
-                case 27:
+                    _a.label = 28;
+                case 28:
                     electronBrowserWindow = new electron_1.BrowserWindow({
                         height: 600,
                         webPreferences: {
@@ -519,18 +579,21 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                     electronBrowserWindow.webContents.on("dom-ready", function () {
                         debug("electronBrowserWindow dom-ready " + publicationFilePath + " : " + publicationUrl);
                     });
-                    if (SECURE && UrlUtils_2.isHTTP(publicationUrl)) {
+                    if (!isHttpWebPubWithoutLCP && SECURE && UrlUtils_1.isHTTP(publicationUrl)) {
                         publicationUrl = sessions_1.convertHttpUrlToCustomScheme(publicationUrl);
                     }
-                    urlEncoded = UrlUtils_1.encodeURIComponent_RFC3986(publicationUrl);
+                    urlEncoded = UrlUtils_2.encodeURIComponent_RFC3986(publicationUrl);
                     htmlPath = IS_DEV ? __dirname + "/../renderer/index.html" : __dirname + "/index.html";
                     htmlPath = htmlPath.replace(/\\/g, "/");
                     fullUrl = "file://" + htmlPath + "?pub=" + urlEncoded;
                     if (lcpHint) {
-                        fullUrl = fullUrl + "&lcpHint=" + UrlUtils_1.encodeURIComponent_RFC3986(lcpHint);
+                        fullUrl = fullUrl + "&lcpHint=" + UrlUtils_2.encodeURIComponent_RFC3986(lcpHint);
                     }
                     urlRoot = _publicationsServer.serverUrl();
-                    fullUrl = fullUrl + "&pubServerRoot=" + UrlUtils_1.encodeURIComponent_RFC3986(urlRoot);
+                    fullUrl = fullUrl + "&pubServerRoot=" + UrlUtils_2.encodeURIComponent_RFC3986(urlRoot);
+                    if (isHttpWebPubWithoutLCP) {
+                        fullUrl = fullUrl + "&isHttpWebPubWithoutLCP=1";
+                    }
                     debug(fullUrl);
                     electronBrowserWindow.webContents.loadURL(fullUrl, { extraHeaders: "pragma: no-cache\n" });
                     return [2];
@@ -574,7 +637,7 @@ function __computeReadiumCssJsonMessage(_publication, _link) {
 electron_1.app.on("ready", function () {
     debug("app ready");
     (function () { return tslib_1.__awaiter(_this, void 0, void 0, function () {
-        var err_10, readiumCSSPath, preloadPath, distTarget, dirnameSlashed, staticOptions, pubPaths, err_11;
+        var err_11, readiumCSSPath, preloadPath, distTarget, dirnameSlashed, staticOptions, pubPaths, err_12;
         var _this = this;
         return tslib_1.__generator(this, function (_a) {
             switch (_a.label) {
@@ -591,8 +654,8 @@ electron_1.app.on("ready", function () {
                     _publicationsFilePaths = _a.sent();
                     return [3, 3];
                 case 2:
-                    err_10 = _a.sent();
-                    debug(err_10);
+                    err_11 = _a.sent();
+                    debug(err_11);
                     return [3, 3];
                 case 3:
                     debug(_publicationsFilePaths);
@@ -653,8 +716,8 @@ electron_1.app.on("ready", function () {
                     _publicationsServerPort = _a.sent();
                     return [3, 7];
                 case 6:
-                    err_11 = _a.sent();
-                    debug(err_11);
+                    err_12 = _a.sent();
+                    debug(err_12);
                     return [3, 7];
                 case 7: return [4, _publicationsServer.start(_publicationsServerPort, SECURE)];
                 case 8:
@@ -667,9 +730,9 @@ electron_1.app.on("ready", function () {
                     debug(_publicationsUrls);
                     resetMenu();
                     process.nextTick(function () { return tslib_1.__awaiter(_this, void 0, void 0, function () {
-                        var args, filePathToLoadOnLaunch, argPath, filePath, detail, message, choice, html, electronBrowserWindow;
-                        return tslib_1.__generator(this, function (_a) {
-                            switch (_a.label) {
+                        var args, filePathToLoadOnLaunch, argPath, filePath, _a, detail, message, choice, html, electronBrowserWindow;
+                        return tslib_1.__generator(this, function (_b) {
+                            switch (_b.label) {
                                 case 0:
                                     args = process.argv.slice(2);
                                     debug("args:");
@@ -678,10 +741,10 @@ electron_1.app.on("ready", function () {
                                     argPath = args[0].trim();
                                     filePath = argPath;
                                     debug(filePath);
-                                    if (!UrlUtils_2.isHTTP(filePath)) return [3, 2];
+                                    if (!UrlUtils_1.isHTTP(filePath)) return [3, 2];
                                     return [4, openFile(filePath)];
                                 case 1:
-                                    _a.sent();
+                                    _b.sent();
                                     return [2];
                                 case 2:
                                     if (!fs.existsSync(filePath)) {
@@ -706,21 +769,28 @@ electron_1.app.on("ready", function () {
                                         debug(filePath);
                                         filePathToLoadOnLaunch = filePath;
                                     }
-                                    _a.label = 3;
+                                    _b.label = 3;
                                 case 3:
-                                    if (!filePathToLoadOnLaunch) return [3, 7];
-                                    if (!(epub_1.isEPUBlication(filePathToLoadOnLaunch) || isManifestJSON(filePathToLoadOnLaunch))) return [3, 5];
-                                    return [4, openFile(filePathToLoadOnLaunch)];
+                                    if (!filePathToLoadOnLaunch) return [3, 9];
+                                    _a = epub_1.isEPUBlication(filePathToLoadOnLaunch);
+                                    if (_a) return [3, 5];
+                                    return [4, isManifestJSON(filePathToLoadOnLaunch)];
                                 case 4:
-                                    _a.sent();
-                                    return [2];
+                                    _a = (_b.sent());
+                                    _b.label = 5;
                                 case 5:
-                                    if (!!fs.lstatSync(filePathToLoadOnLaunch).isDirectory()) return [3, 7];
-                                    return [4, openFileDownload(filePathToLoadOnLaunch)];
+                                    if (!_a) return [3, 7];
+                                    return [4, openFile(filePathToLoadOnLaunch)];
                                 case 6:
-                                    _a.sent();
+                                    _b.sent();
                                     return [2];
                                 case 7:
+                                    if (!!fs.lstatSync(filePathToLoadOnLaunch).isDirectory()) return [3, 9];
+                                    return [4, openFileDownload(filePathToLoadOnLaunch)];
+                                case 8:
+                                    _b.sent();
+                                    return [2];
+                                case 9:
                                     detail = "Note that this is only a developer application (" +
                                         "test framework) for the Readium2 NodeJS 'streamer' and Electron-based 'navigator'.";
                                     message = "Use the 'Electron' menu to load publications.";
@@ -852,7 +922,7 @@ function resetMenu() {
 }
 function openFileDownload(filePath) {
     return tslib_1.__awaiter(this, void 0, void 0, function () {
-        var dir, ext, filename, destFileName, epubFilePath, err_12, result_1;
+        var dir, ext, filename, destFileName, epubFilePath, err_13, result_1;
         var _this = this;
         return tslib_1.__generator(this, function (_a) {
             switch (_a.label) {
@@ -873,11 +943,11 @@ function openFileDownload(filePath) {
                     epubFilePath = _a.sent();
                     return [3, 4];
                 case 3:
-                    err_12 = _a.sent();
+                    err_13 = _a.sent();
                     process.nextTick(function () {
-                        var detail = (typeof err_12 === "string") ?
-                            err_12 :
-                            (err_12.toString ? err_12.toString() : "ERROR!?");
+                        var detail = (typeof err_13 === "string") ?
+                            err_13 :
+                            (err_13.toString ? err_13.toString() : "ERROR!?");
                         var message = "LCP EPUB download fail!]";
                         var res = electron_1.dialog.showMessageBox({
                             buttons: ["&OK"],
@@ -942,31 +1012,34 @@ function openFile(filePath) {
             switch (_a.label) {
                 case 0:
                     n = _publicationsFilePaths.indexOf(filePath);
-                    if (n < 0) {
-                        if (isManifestJSON(filePath)) {
-                            _publicationsFilePaths.push(filePath);
-                            debug(_publicationsFilePaths);
-                            _publicationsUrls.push(filePath);
-                            debug(_publicationsUrls);
-                            n = _publicationsFilePaths.length - 1;
-                        }
-                        else {
-                            publicationPaths = _publicationsServer.addPublications([filePath]);
-                            debug(publicationPaths);
-                            _publicationsFilePaths.push(filePath);
-                            debug(_publicationsFilePaths);
-                            _publicationsUrls.push("" + _publicationsRootUrl + publicationPaths[0]);
-                            debug(_publicationsUrls);
-                            n = _publicationsFilePaths.length - 1;
-                        }
-                        process.nextTick(function () {
-                            resetMenu();
-                        });
+                    if (!(n < 0)) return [3, 2];
+                    return [4, isManifestJSON(filePath)];
+                case 1:
+                    if (_a.sent()) {
+                        _publicationsFilePaths.push(filePath);
+                        debug(_publicationsFilePaths);
+                        _publicationsUrls.push(filePath);
+                        debug(_publicationsUrls);
+                        n = _publicationsFilePaths.length - 1;
                     }
+                    else {
+                        publicationPaths = _publicationsServer.addPublications([filePath]);
+                        debug(publicationPaths);
+                        _publicationsFilePaths.push(filePath);
+                        debug(_publicationsFilePaths);
+                        _publicationsUrls.push("" + _publicationsRootUrl + publicationPaths[0]);
+                        debug(_publicationsUrls);
+                        n = _publicationsFilePaths.length - 1;
+                    }
+                    process.nextTick(function () {
+                        resetMenu();
+                    });
+                    _a.label = 2;
+                case 2:
                     file = _publicationsFilePaths[n];
                     pubManifestUrl = _publicationsUrls[n];
                     return [4, createElectronBrowserWindow(file, pubManifestUrl)];
-                case 1:
+                case 3:
                     _a.sent();
                     return [2];
             }

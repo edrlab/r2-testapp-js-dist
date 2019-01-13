@@ -19,7 +19,7 @@ window.riot_linklist = function (_opts) {
             while (!thiz.opts.handleLink && thiz.parent) {
                 thiz = thiz.parent;
             }
-            thiz.opts.handleLink(href);
+            thiz.opts.handleLink(new URL(href, thiz.opts.url).toString());
         }
     };
 };

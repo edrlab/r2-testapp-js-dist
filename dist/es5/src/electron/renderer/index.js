@@ -13,6 +13,7 @@ var publication_1 = require("r2-shared-js/dist/es5/src/models/publication");
 var debounce_1 = require("debounce");
 var electron_1 = require("electron");
 var ta_json_x_1 = require("ta-json-x");
+var throttle = require("throttleit");
 var events_1 = require("../common/events");
 var store_electron_1 = require("../common/store-electron");
 var index_2 = require("./riots/linklist/index_");
@@ -22,14 +23,6 @@ var index_5 = require("./riots/menuselect/index_");
 var SystemFonts = require("system-font-families");
 var IS_DEV = (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "dev");
 var queryParams = querystring_1.getURLQueryParams();
-electron_1.webFrame.registerURLSchemeAsSecure(sessions_1.READIUM2_ELECTRON_HTTP_PROTOCOL);
-electron_1.webFrame.registerURLSchemeAsPrivileged(sessions_1.READIUM2_ELECTRON_HTTP_PROTOCOL, {
-    allowServiceWorkers: false,
-    bypassCSP: false,
-    corsEnabled: false,
-    secure: true,
-    supportFetchAPI: true,
-});
 var readiumCssDefaultsJson = readium_css_settings_1.readiumCSSDefaults;
 var readiumCssKeys = Object.keys(readium_css_settings_1.readiumCSSDefaults);
 readiumCssKeys.forEach(function (key) {
@@ -95,11 +88,19 @@ console.log(publicationJsonUrl);
 var publicationJsonUrl_ = publicationJsonUrl.startsWith(sessions_1.READIUM2_ELECTRON_HTTP_PROTOCOL) ?
     sessions_1.convertCustomSchemeToHttpUrl(publicationJsonUrl) : publicationJsonUrl;
 console.log(publicationJsonUrl_);
-var pathBase64 = publicationJsonUrl_.
-    replace(/.*\/pub\/(.*)\/manifest.json.*/, "$1");
-console.log(pathBase64);
-var pathDecoded = new Buffer(decodeURIComponent(pathBase64), "base64").toString("utf8");
-console.log(pathDecoded);
+var isHttpWebPubWithoutLCP = queryParams["isHttpWebPub"];
+console.log(isHttpWebPubWithoutLCP);
+var pathDecoded = "";
+if (isHttpWebPubWithoutLCP) {
+    pathDecoded = publicationJsonUrl;
+}
+else {
+    var pathBase64 = publicationJsonUrl_.
+        replace(/.*\/pub\/(.*)\/manifest.json.*/, "$1");
+    console.log(pathBase64);
+    pathDecoded = new Buffer(decodeURIComponent(pathBase64), "base64").toString("utf8");
+    console.log(pathDecoded);
+}
 var pathFileName = pathDecoded.substr(pathDecoded.replace(/\\/g, "/").lastIndexOf("/") + 1, pathDecoded.length - 1);
 console.log(pathFileName);
 var lcpHint = queryParams["lcpHint"];
@@ -126,6 +127,15 @@ electronStore.onChanged("readiumCSS.textAlign", function (newValue, oldValue) {
     var justifySwitchEl = document.getElementById("justify_switch");
     var justifySwitch = justifySwitchEl.mdcSwitch;
     justifySwitch.checked = (newValue === "justify");
+    refreshReadiumCSS();
+});
+electronStore.onChanged("readiumCSS.noFootnotes", function (newValue, oldValue) {
+    if (typeof newValue === "undefined" || typeof oldValue === "undefined") {
+        return;
+    }
+    var footnotesSwitchEl = document.getElementById("footnotes_switch");
+    var footnotesSwitch = footnotesSwitchEl.mdcSwitch;
+    footnotesSwitch.checked = newValue ? false : true;
     refreshReadiumCSS();
 });
 electronStore.onChanged("readiumCSS.paged", function (newValue, oldValue) {
@@ -164,6 +174,9 @@ electronStore.onChanged("readiumCSSEnable", function (newValue, oldValue) {
     var justifySwitchEl = document.getElementById("justify_switch");
     var justifySwitch = justifySwitchEl.mdcSwitch;
     justifySwitch.disabled = !newValue;
+    var footnotesSwitchEl = document.getElementById("footnotes_switch");
+    var footnotesSwitch = footnotesSwitchEl.mdcSwitch;
+    footnotesSwitch.disabled = !newValue;
     var paginateSwitchEl = document.getElementById("paginate_switch");
     var paginateSwitch = paginateSwitchEl.mdcSwitch;
     paginateSwitch.disabled = !newValue;
@@ -539,6 +552,15 @@ window.addEventListener("DOMContentLoaded", function () {
         electronStore.set("readiumCSS.textAlign", checked ? "justify" : "initial");
     });
     justifySwitch.disabled = !electronStore.get("readiumCSSEnable");
+    var footnotesSwitchEl = document.getElementById("footnotes_switch");
+    var footnotesSwitch = new window.mdc.switchControl.MDCSwitch(footnotesSwitchEl);
+    footnotesSwitchEl.mdcSwitch = footnotesSwitch;
+    footnotesSwitch.checked = electronStore.get("readiumCSS.noFootnotes") ? false : true;
+    footnotesSwitchEl.addEventListener("change", function (_event) {
+        var checked = footnotesSwitch.checked;
+        electronStore.set("readiumCSS.noFootnotes", checked ? false : true);
+    });
+    footnotesSwitch.disabled = !electronStore.get("readiumCSSEnable");
     var paginateSwitchEl = document.getElementById("paginate_switch");
     var paginateSwitch = new window.mdc.switchControl.MDCSwitch(paginateSwitchEl);
     paginateSwitchEl.mdcSwitch = paginateSwitch;
@@ -751,18 +773,77 @@ function startNavigatorExperiment() {
     var drawerButton = document.getElementById("drawerButton");
     drawerButton.focus();
     (function () { return tslib_1.__awaiter(_this, void 0, void 0, function () {
-        var response, e_1, _publicationJSON, e_2, _publication, title, keys, h1, buttonNavLeft, buttonNavRight, opts, opts, tag_1, opts, tag_2, landmarksData, opts, tag_3, readStore, location, obj;
+        function refreshTtsUiState() {
+            if (_ttsState === index_1.TTSStateEnum.PAUSED) {
+                buttonttsPLAY.style.display = "none";
+                buttonttsRESUME.style.display = "inline-block";
+                buttonttsPAUSE.style.display = "none";
+                buttonttsSTOP.style.display = "inline-block";
+                buttonttsPREVIOUS.style.display = "inline-block";
+                buttonttsNEXT.style.display = "inline-block";
+            }
+            else if (_ttsState === index_1.TTSStateEnum.STOPPED) {
+                buttonttsPLAY.style.display = "inline-block";
+                buttonttsRESUME.style.display = "none";
+                buttonttsPAUSE.style.display = "none";
+                buttonttsSTOP.style.display = "none";
+                buttonttsPREVIOUS.style.display = "none";
+                buttonttsNEXT.style.display = "none";
+            }
+            else if (_ttsState === index_1.TTSStateEnum.PLAYING) {
+                buttonttsPLAY.style.display = "none";
+                buttonttsRESUME.style.display = "none";
+                buttonttsPAUSE.style.display = "inline-block";
+                buttonttsSTOP.style.display = "inline-block";
+                buttonttsPREVIOUS.style.display = "inline-block";
+                buttonttsNEXT.style.display = "inline-block";
+            }
+            else {
+                buttonttsPLAY.style.display = "none";
+                buttonttsRESUME.style.display = "none";
+                buttonttsPAUSE.style.display = "none";
+                buttonttsSTOP.style.display = "none";
+                buttonttsPREVIOUS.style.display = "none";
+                buttonttsNEXT.style.display = "none";
+            }
+        }
+        function ttsEnableToggle() {
+            if (_ttsEnabled) {
+                buttonttsENABLE.style.display = "inline-block";
+                buttonttsDISABLE.style.display = "none";
+                index_1.ttsClickEnable(false);
+                index_1.ttsStop();
+                setTimeout(function () {
+                    _ttsEnabled = false;
+                    _ttsState = undefined;
+                    refreshTtsUiState();
+                }, 100);
+            }
+            else {
+                buttonttsENABLE.style.display = "none";
+                buttonttsDISABLE.style.display = "inline-block";
+                index_1.ttsClickEnable(true);
+                index_1.ttsStop();
+                setTimeout(function () {
+                    _ttsEnabled = true;
+                    _ttsState = index_1.TTSStateEnum.STOPPED;
+                    refreshTtsUiState();
+                }, 100);
+            }
+        }
+        var response, e_1, _publicationJSON, e_2, _publication, title, keys, h1, buttonttsPLAY, buttonttsPAUSE, buttonttsSTOP, buttonttsRESUME, buttonttsNEXT, buttonttsPREVIOUS, buttonttsENABLE, buttonttsDISABLE, _ttsState, _ttsEnabled, buttonNavLeft, buttonNavRight, onWheel, opts, opts, tag_1, opts, tag_2, landmarksData, opts, tag_3, readStore, location, obj;
         return tslib_1.__generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     _a.trys.push([0, 2, , 3]);
-                    return [4, fetch(publicationJsonUrl)];
+                    return [4, fetch(publicationJsonUrl_)];
                 case 1:
                     response = _a.sent();
                     return [3, 3];
                 case 2:
                     e_1 = _a.sent();
                     console.log(e_1);
+                    console.log(publicationJsonUrl_);
                     return [2];
                 case 3:
                     if (!response.ok) {
@@ -798,8 +879,52 @@ function startNavigatorExperiment() {
                         if (title) {
                             h1 = document.getElementById("pubTitle");
                             h1.textContent = title;
+                            h1.addEventListener("click", function (_event) {
+                                if (window.READIUM2 && window.READIUM2.debug) {
+                                    window.READIUM2.debug(window.READIUM2.DEBUG_VISUALS ? false : true);
+                                }
+                            });
                         }
                     }
+                    buttonttsPLAY = document.getElementById("ttsPLAY");
+                    buttonttsPLAY.addEventListener("click", function (_event) {
+                        index_1.ttsPlay();
+                    });
+                    buttonttsPAUSE = document.getElementById("ttsPAUSE");
+                    buttonttsPAUSE.addEventListener("click", function (_event) {
+                        index_1.ttsPause();
+                    });
+                    buttonttsSTOP = document.getElementById("ttsSTOP");
+                    buttonttsSTOP.addEventListener("click", function (_event) {
+                        index_1.ttsStop();
+                    });
+                    buttonttsRESUME = document.getElementById("ttsRESUME");
+                    buttonttsRESUME.addEventListener("click", function (_event) {
+                        index_1.ttsResume();
+                    });
+                    buttonttsNEXT = document.getElementById("ttsNEXT");
+                    buttonttsNEXT.addEventListener("click", function (_event) {
+                        index_1.ttsNext();
+                    });
+                    buttonttsPREVIOUS = document.getElementById("ttsPREVIOUS");
+                    buttonttsPREVIOUS.addEventListener("click", function (_event) {
+                        index_1.ttsPrevious();
+                    });
+                    buttonttsENABLE = document.getElementById("ttsENABLE");
+                    buttonttsENABLE.addEventListener("click", function (_event) {
+                        ttsEnableToggle();
+                    });
+                    buttonttsDISABLE = document.getElementById("ttsDISABLE");
+                    buttonttsDISABLE.addEventListener("click", function (_event) {
+                        ttsEnableToggle();
+                    });
+                    refreshTtsUiState();
+                    index_1.ttsListen(function (ttsState) {
+                        _ttsState = ttsState;
+                        refreshTtsUiState();
+                    });
+                    buttonttsDISABLE.style.display = "none";
+                    _ttsEnabled = false;
                     buttonNavLeft = document.getElementById("buttonNavLeft");
                     buttonNavLeft.addEventListener("click", function (_event) {
                         index_1.navLeftOrRight(true);
@@ -808,6 +933,17 @@ function startNavigatorExperiment() {
                     buttonNavRight.addEventListener("click", function (_event) {
                         index_1.navLeftOrRight(false);
                     });
+                    onWheel = throttle(function (ev) {
+                        console.log("wheel: " + ev.deltaX + " - " + ev.deltaY);
+                        if (ev.deltaY < 0 || ev.deltaX < 0) {
+                            index_1.navLeftOrRight(true);
+                        }
+                        else if (ev.deltaY > 0 || ev.deltaX > 0) {
+                            index_1.navLeftOrRight(false);
+                        }
+                    }, 300);
+                    buttonNavLeft.addEventListener("wheel", onWheel);
+                    buttonNavRight.addEventListener("wheel", onWheel);
                     if (_publication.Spine && _publication.Spine.length) {
                         opts = {
                             basic: true,
@@ -946,6 +1082,7 @@ function startNavigatorExperiment() {
                             console.log("!rootHtmlElement ???");
                             return;
                         }
+                        console.log(location);
                         index_1.installNavigatorDOM(_publication, publicationJsonUrl, rootHtmlElementID, preloadPath, location);
                     }, 500);
                     return [2];
