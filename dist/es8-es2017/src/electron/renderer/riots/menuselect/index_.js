@@ -39,13 +39,21 @@ window.riot_menuselect = function (_opts) {
         return found ? found.id : undefined;
     };
     that.getIdForIndex = function (index) {
-        const found = this.opts.options.find((_option, i) => {
+        let i = -1;
+        const found = this.opts.options.find((option, _i) => {
+            if (option.label !== "_") {
+                i++;
+            }
             return index === i;
         });
         return found ? found.id : undefined;
     };
     that.getLabelForIndex = function (index) {
-        const found = this.opts.options.find((_option, i) => {
+        let i = -1;
+        const found = this.opts.options.find((option, _i) => {
+            if (option.label !== "_") {
+                i++;
+            }
             return index === i;
         });
         return found ? found.label : undefined;
@@ -65,13 +73,11 @@ window.riot_menuselect = function (_opts) {
         that.root.mdcSelect.disabled = disabled;
     };
     that.on("mount", () => {
-        console.log("that.root:");
-        console.log(that.root);
         const mdcSelector = new window.mdc.select.MDCSelect(that.root);
         that.root.mdcSelect = mdcSelector;
         mdcSelector.disabled = that.opts.disabled;
-        mdcSelector.listen("change", (ev) => {
-            that.trigger("selectionChanged", ev.target.selectedIndex);
+        mdcSelector.listen("MDCSelect:change", (ev) => {
+            that.trigger("selectionChanged", ev.detail.index);
         });
     });
 };

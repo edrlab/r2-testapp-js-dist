@@ -1,4 +1,8 @@
 export declare const R2_EVENT_DEVTOOLS = "R2_EVENT_DEVTOOLS";
+export declare const R2_EVENT_OPEN_URL_OR_PATH = "R2_EVENT_OPEN_URL_OR_PATH";
+export interface IEventPayload_R2_EVENT_OPEN_URL_OR_PATH {
+    urlOrPath: string;
+}
 export declare const R2_EVENT_LCP_LSD_RETURN = "R2_EVENT_LCP_LSD_RETURN";
 export interface IEventPayload_R2_EVENT_LCP_LSD_RETURN {
     publicationFilePath: string;

@@ -39,13 +39,21 @@ window.riot_menuselect = function (_opts) {
         return found ? found.id : undefined;
     };
     that.getIdForIndex = function (index) {
-        var found = this.opts.options.find(function (_option, i) {
+        var i = -1;
+        var found = this.opts.options.find(function (option, _i) {
+            if (option.label !== "_") {
+                i++;
+            }
             return index === i;
         });
         return found ? found.id : undefined;
     };
     that.getLabelForIndex = function (index) {
-        var found = this.opts.options.find(function (_option, i) {
+        var i = -1;
+        var found = this.opts.options.find(function (option, _i) {
+            if (option.label !== "_") {
+                i++;
+            }
             return index === i;
         });
         return found ? found.label : undefined;
@@ -65,13 +73,11 @@ window.riot_menuselect = function (_opts) {
         that.root.mdcSelect.disabled = disabled;
     };
     that.on("mount", function () {
-        console.log("that.root:");
-        console.log(that.root);
         var mdcSelector = new window.mdc.select.MDCSelect(that.root);
         that.root.mdcSelect = mdcSelector;
         mdcSelector.disabled = that.opts.disabled;
-        mdcSelector.listen("change", function (ev) {
-            that.trigger("selectionChanged", ev.target.selectedIndex);
+        mdcSelector.listen("MDCSelect:change", function (ev) {
+            that.trigger("selectionChanged", ev.detail.index);
         });
     });
 };
