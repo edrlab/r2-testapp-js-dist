@@ -1923,13 +1923,13 @@ electron_1.ipcRenderer.on(events_1.R2_EVENT_LCP_LSD_RENEW_RES, function (_event,
     console.log("R2_EVENT_LCP_LSD_RENEW_RES");
     console.log(payload.okay);
     console.log(payload.error);
-    console.log(payload.lsdJson);
+    console.log(payload.lsd);
 });
 electron_1.ipcRenderer.on(events_1.R2_EVENT_LCP_LSD_RETURN_RES, function (_event, payload) {
     console.log("R2_EVENT_LCP_LSD_RETURN_RES");
     console.log(payload.okay);
     console.log(payload.error);
-    console.log(payload.lsdJson);
+    console.log(payload.lsd);
 });
 function startNavigatorExperiment() {
     var _this = this;

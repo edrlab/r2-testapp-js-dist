@@ -54,7 +54,7 @@ const IS_DEV = (process.env.NODE_ENV === "development" || process.env.NODE_ENV =
 const lcpPluginPath = IS_DEV ?
     path.join(process.cwd(), "LCP", "lcp.node") :
     path.join(__dirname, "lcp.node");
-lcp_1.setLcpNativePluginPath(lcpPluginPath);
+lcp_2.setLcpNativePluginPath(lcpPluginPath);
 const debug = debug_("r2:testapp#electron/main/index");
 let _publicationsServer;
 let _publicationsServerPort;
@@ -131,6 +131,10 @@ function isManifestJSON(urlOrPath) {
 function tryLSD(publication, publicationFilePath) {
     return tslib_1.__awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve, reject) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+            if (!publication.LCP) {
+                reject("No LCP data!");
+                return;
+            }
             try {
                 yield status_document_processing_1.launchStatusDocumentProcessing(publication.LCP, deviceIDManager, (licenseUpdateJson) => tslib_1.__awaiter(this, void 0, void 0, function* () {
                     debug("launchStatusDocumentProcessing DONE.");
@@ -181,7 +185,7 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                 const responseJson = global.JSON.parse(responseStr);
                 debug(responseJson);
                 let lcpl;
-                lcpl = ta_json_x_1.JSON.deserialize(responseJson, lcp_2.LCP);
+                lcpl = ta_json_x_1.JSON.deserialize(responseJson, lcp_1.LCP);
                 lcpl.ZipPath = "META-INF/license.lcpl";
                 lcpl.JsonSource = responseStr;
                 lcpl.init();
@@ -444,13 +448,25 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
             catch (err) {
                 debug(err);
             }
-            if (publication.LCP.Encryption &&
-                publication.LCP.Encryption.UserKey &&
-                publication.LCP.Encryption.UserKey.TextHint) {
-                lcpHint = publication.LCP.Encryption.UserKey.TextHint;
+            let blockBecauseLSD = false;
+            if (publication.LCP.LSD) {
+                if (publication.LCP.LSD.Status === "revoked"
+                    || publication.LCP.LSD.Status === "returned"
+                    || publication.LCP.LSD.Status === "cancelled"
+                    || publication.LCP.LSD.Status === "expired") {
+                    blockBecauseLSD = true;
+                    debug(">>>> LICENSE LSD STATUS BLOCK ACCESS!");
+                }
             }
-            if (!lcpHint) {
-                lcpHint = "LCP passphrase";
+            if (!blockBecauseLSD) {
+                if (publication.LCP.Encryption &&
+                    publication.LCP.Encryption.UserKey &&
+                    publication.LCP.Encryption.UserKey.TextHint) {
+                    lcpHint = publication.LCP.Encryption.UserKey.TextHint;
+                }
+                if (!lcpHint) {
+                    lcpHint = "LCP passphrase";
+                }
             }
         }
         const electronBrowserWindow = new electron_1.BrowserWindow({

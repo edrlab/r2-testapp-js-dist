@@ -55,7 +55,7 @@ var IS_DEV = (process.env.NODE_ENV === "development" || process.env.NODE_ENV ===
 var lcpPluginPath = IS_DEV ?
     path.join(process.cwd(), "LCP", "lcp.node") :
     path.join(__dirname, "lcp.node");
-lcp_1.setLcpNativePluginPath(lcpPluginPath);
+lcp_2.setLcpNativePluginPath(lcpPluginPath);
 var debug = debug_("r2:testapp#electron/main/index");
 var _publicationsServer;
 var _publicationsServerPort;
@@ -160,7 +160,13 @@ function tryLSD(publication, publicationFilePath) {
                     return tslib_1.__generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
-                                _a.trys.push([0, 2, , 3]);
+                                if (!publication.LCP) {
+                                    reject("No LCP data!");
+                                    return [2];
+                                }
+                                _a.label = 1;
+                            case 1:
+                                _a.trys.push([1, 3, , 4]);
                                 return [4, status_document_processing_1.launchStatusDocumentProcessing(publication.LCP, deviceIDManager, function (licenseUpdateJson) { return tslib_1.__awaiter(_this, void 0, void 0, function () {
                                         var res, err_3, err_4;
                                         return tslib_1.__generator(this, function (_a) {
@@ -203,15 +209,15 @@ function tryLSD(publication, publicationFilePath) {
                                             }
                                         });
                                     }); })];
-                            case 1:
-                                _a.sent();
-                                return [3, 3];
                             case 2:
+                                _a.sent();
+                                return [3, 4];
+                            case 3:
                                 err_2 = _a.sent();
                                 debug(err_2);
                                 reject(err_2);
-                                return [3, 3];
-                            case 3: return [2];
+                                return [3, 4];
+                            case 4: return [2];
                         }
                     });
                 }); })];
@@ -220,7 +226,7 @@ function tryLSD(publication, publicationFilePath) {
 }
 function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
     return tslib_1.__awaiter(this, void 0, void 0, function () {
-        var lcpHint, publication, isWebPub, isHttpWebPub, isHttpWebPubWithoutLCP, failure_1, handleLCP_1, successLCP_1, needsStreamingResponse_1, handleManifestJson_1, success_1, promise, err_5, response, err_6, responseStr, err_7, err_8, electronBrowserWindow, urlEncoded, htmlPath, fullUrl, urlRoot;
+        var lcpHint, publication, isWebPub, isHttpWebPub, isHttpWebPubWithoutLCP, failure_1, handleLCP_1, successLCP_1, needsStreamingResponse_1, handleManifestJson_1, success_1, promise, err_5, response, err_6, responseStr, err_7, err_8, blockBecauseLSD, electronBrowserWindow, urlEncoded, htmlPath, fullUrl, urlRoot;
         var _this = this;
         return tslib_1.__generator(this, function (_a) {
             switch (_a.label) {
@@ -242,7 +248,7 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                         var responseJson = global.JSON.parse(responseStr);
                         debug(responseJson);
                         var lcpl;
-                        lcpl = ta_json_x_1.JSON.deserialize(responseJson, lcp_2.LCP);
+                        lcpl = ta_json_x_1.JSON.deserialize(responseJson, lcp_1.LCP);
                         lcpl.ZipPath = "META-INF/license.lcpl";
                         lcpl.JsonSource = responseStr;
                         lcpl.init();
@@ -613,13 +619,25 @@ function createElectronBrowserWindow(publicationFilePath, publicationUrl) {
                     debug(err_8);
                     return [3, 27];
                 case 27:
-                    if (publication.LCP.Encryption &&
-                        publication.LCP.Encryption.UserKey &&
-                        publication.LCP.Encryption.UserKey.TextHint) {
-                        lcpHint = publication.LCP.Encryption.UserKey.TextHint;
+                    blockBecauseLSD = false;
+                    if (publication.LCP.LSD) {
+                        if (publication.LCP.LSD.Status === "revoked"
+                            || publication.LCP.LSD.Status === "returned"
+                            || publication.LCP.LSD.Status === "cancelled"
+                            || publication.LCP.LSD.Status === "expired") {
+                            blockBecauseLSD = true;
+                            debug(">>>> LICENSE LSD STATUS BLOCK ACCESS!");
+                        }
                     }
-                    if (!lcpHint) {
-                        lcpHint = "LCP passphrase";
+                    if (!blockBecauseLSD) {
+                        if (publication.LCP.Encryption &&
+                            publication.LCP.Encryption.UserKey &&
+                            publication.LCP.Encryption.UserKey.TextHint) {
+                            lcpHint = publication.LCP.Encryption.UserKey.TextHint;
+                        }
+                        if (!lcpHint) {
+                            lcpHint = "LCP passphrase";
+                        }
                     }
                     _a.label = 28;
                 case 28:
